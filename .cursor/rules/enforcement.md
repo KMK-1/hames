@@ -106,3 +106,16 @@
   ```
 - **PowerShell 단축어 등록:** `~/Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1`에 `hames` 함수 정의. 새 PowerShell 창 자동 로드.
 - **검증:** `-DryRun` 모드로 사전 지시(또는 헤드리스 합성) 확인 가능. 실제 모델 호출 없음.
+
+---
+
+## [7] 룰 파일 편집 규율 (방어선 1/2/3 보호)
+
+CLAUDE.md 커널·`.cursor/rules/*` 모듈 등 **로드되는 룰 파일** 편집 시:
+
+- **성능(지시 충실도) > 토큰 절약.** 로드되는 정본에서 정보를 빼는 행위(예: 30줄→6줄 요약)는 모델 행동에 영향을 줄 수 있으므로 하지 않는다. 안전한 것은 *로드되는 모듈 집합에 그대로 남는 순수 중복 제거*뿐.
+- **압축·요약 금지:** "이름은 같지만 한쪽에 설명이 더 붙은 목록"은 순수 중복이 아니다(지우면 손실) → 보류.
+- **방어선 시그니처 6종 문자열**(`HAMES SYSTEM KERNEL v5.5` | `DEEP_TASK_PROTOCOL` | `FIXED LOAD ORDER` | `COO ROUTER` | `DEFINED_CRITICAL_ACTIONS` | `HAMES ARSENAL — 툴 레지스트리`)은 정본 파일에서 절대 삭제·개명 금지.
+- 룰 개선은 **추가(additive)**로만 반영한다.
+
+**근거:** 룰 파일은 매 세션 컨텍스트로 로드돼 모델 행동을 직접 규정한다. 토큰 절약보다 지시 충실도가 우선.

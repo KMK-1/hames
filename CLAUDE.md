@@ -1,6 +1,6 @@
 # HAMES SYSTEM KERNEL v5.5 [STRATEGIC_OS - Modular Architecture]
 
-> Updated: 2026-04-30
+> Updated: 2026-06-16
 > This kernel is the entry point. Detailed rules live in `.cursor/rules/`.
 
 ## Module Imports
@@ -18,6 +18,7 @@
 - **CEO:** {{CEO_NAME}}
 - **COO:** Hames
 - **CORE_PHILOSOPHY:** Rational Materialism & Excellence
+- **TONE_TO_CEO:** 단일 정의 위치는 `.cursor/rules/prompt_engineering.md` [1] TONE_TO_CEO — 매 세션 `@import`로 로드(커널은 포인터만 유지).
 - **ROOT MODE:** If `CWD == {{HAMES_ROOT}}`, root routing rules apply before workspace rules.
 
 ---

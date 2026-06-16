@@ -41,7 +41,7 @@ Rules:
 - `Write` may create a new file, but must not overwrite an existing file.
 - `Edit` must be surgical and targeted.
 - dangerous overwrite-style Bash patterns are blocked.
-- large near-total rewrites through `Edit` are blocked.
+- oversized `Edit` rewrites are guarded in two stages: `compliance_auditor.js` (PreToolUse) blocks an over-large `old_string` *before* the write; `verify_edit_surgery.js` (PostToolUse) detects an over-large *after-diff* (e.g. a tiny `old_string` expanded into a huge `new_string`) *after* the write and signals the model to self-correct.
 
 These rules are enforced by hook scripts, not just by documentation.
 
@@ -108,6 +108,8 @@ Hames harness exists to keep the system:
 - workspace-consistent
 - resistant to accidental overwrite or uncontrolled drift
 
+**우선순위:** 하네스 무결성 > 토큰 절약. 하네스가 무너질 위험을 감수하느니 토큰을 더 쓰더라도 시스템 완성도·집행력을 우선한다. enforcement를 우회하는 방식의 "최적화"는 금지 — 풀어야 하면 우회 말고 좁은 grace로 설계.
+
 ## [9] WORKSPACE LOCK
 
 파일 쓰기를 활성 워크스페이스로 강제하는 실시간 차단 레이어.
@@ -144,3 +146,73 @@ Hames harness exists to keep the system:
 **적용 대상:** 모든 슬래시 커맨드, 모든 검증 단계, 모든 단계별 분기 결정 지점.
 
 **근거:** 본 모듈 [8] DESIGN INTENT — "resistant to accidental overwrite or uncontrolled drift". 부정형 거짓 보고는 silent drift의 가장 흔한 진입로.
+
+## [11] SCOPE DISCIPLINE — 자의적 사이드 액션 금지
+
+CEO가 승인한 작업 범위 밖에서 에이전트가 "안전을 위해" 또는 "정리 차원에서" 자의적으로 추가하는 사이드 액션은 금지된다.
+
+**대표적 금지 사례:**
+- 백업 브랜치/태그 생성 (특히 원격 push) — 명시 요청 없이 절대 금지
+- 결정 보류용으로 별도 산출물(.md, .txt, .json 등) 미리 만들어두기
+- 한 옵션 선택 직후 "혹시 모르니" 다른 옵션도 함께 준비
+- 정리·리팩토링·주석 추가·관련 파일 자동 갱신 등 task 범위 외 변경
+- 산출물 페이지별/항목별 검토 중 묻지 않은 추가 수정 제안, 또는 같은 결함의 전체 일괄(replace_all) 치환 — 검토 중인 **그 페이지만** 고치고 CEO 페이스를 따른다.
+
+**원칙:**
+1. 명시 승인 범위 안에서만 동작한다.
+2. 추가 안전 조치(백업 등)가 필요하다고 판단되면 **실행 전** 1줄로 보고하고 승인을 받는다.
+3. 사후 보고("이미 해뒀어요")는 위반으로 간주한다.
+4. `prompt_engineering.md` [1] CODING_DISCIPLINE("task가 요구하지 않은 기능·추상화·리팩토링 금지")의 연장선.
+
+**근거 [8]:** 에이전트 자의적 추가 액션은 drift의 한 형태.
+
+## [12] GIT RESET PRE-FLIGHT — CWD 검증 의무
+
+`git reset`, `git checkout <SHA>`, `git rebase`, `git clean` 같은 **HEAD/working tree를 비가역적으로 이동시키는 명령** 실행 직전에 다음 3줄을 raw로 출력해 확인한다 (요약·생략 금지):
+
+```bash
+pwd
+git log -1 --oneline
+git rev-parse --abbrev-ref HEAD
+```
+
+**원칙:**
+
+1. **CWD 묵시 가정 금지** — "당연히 여기일 것"이라는 추정으로 `git reset HEAD~1` 류를 실행하지 않는다. 직전에 `cd`했더라도 다시 `pwd`로 raw 확인.
+2. **서브모듈 cascade 인지** — 루트에서 `git reset --hard <SHA>`를 실행하면 등록된 서브모듈 HEAD가 부모 커밋의 gitlink SHA로 끌려갈 수 있다. 부모 reset 직후 서브모듈 `git reflog`를 raw로 확인하기 전에는 서브모듈에서 추가 reset/rebase 금지.
+3. **reflog 기반 정확 SHA 복원** — 복원 시 `HEAD~N` shorthand 금지. `git reflog`로 확인한 **정확한 SHA**로 복원한다.
+4. **부정형 결론 안전장치 연장 ([10])** — "이미 복원됐다 / 손실 없다 / 동기화 완료"는 reflog와 `git diff <기준SHA>..HEAD --stat` raw 출력을 화면에 박은 뒤에만 낸다.
+
+**근거 [8]:** reset류는 drift의 가장 비가역적인 진입로.
+
+## [13] DEBUGGING TRIPWIRE — 근본원인 우선 & 3-실패 재검토
+
+버그·테스트 실패·예상 외 동작에 대응할 때 적용되는 모델 자체 행동 규율.
+
+1. **근본원인 우선** — 수정 시도 전 에러 메시지 raw 확인 + 재현 + 최근 변경 추적으로 원인을 먼저 특정한다. 증상만 덮는 수정은 실패로 간주.
+2. **단일 가설 검증** — 한 번에 하나의 가설만 최소 변경으로 테스트한다. 산탄총식 동시 수정 금지.
+3. **3-실패 트립와이어** — 동일 증상(같은 에러 메시지 또는 같은 테스트의 실패)에 대한 수정이 3회 실패하면 멈춘다. 4번째 시도 대신 아키텍처·전제 자체를 의심하고 CEO에게 보고한다. "한 번만 더"는 위반 신호.
+4. **부정형 연계 ([10])** — "고쳐졌다 / 통과한다"는 결론은 테스트 raw 출력을 표시한 뒤에만 낸다.
+
+**근거 [8]:** 반복 헛발질은 토큰을 태우는 silent drift.
+
+## [14] FACT GROUNDING — 근거 없는 사실·제품 날조 금지
+
+산출물(전략·발표·보고)에 **소스(제품자료·검증된 사실)에 없는 제품·수치·주장을 지어내지 않는다.** 특히 존재가 확인 안 된 미래 제품/로드맵을 사실처럼 제시 금지.
+
+- 넣는 제품·수치·주장은 소스에 있거나 검증된 것만. 추측은 `[추정]` 라벨 + 단정 금지, 또는 삭제.
+- **원문 오독 주의:** 소스의 약점/부정형 주장은 실제 텍스트를 추출·정독해 확인한 뒤 쓴다(기억·인상으로 단정 금지).
+- [10] 부정형 검증의 긍정형 짝. 대외 산출물은 지어낸 항목 하나가 전체 신뢰를 깬다.
+
+## [15] SECRET HANDLING — API 키 노출 금지
+
+API 키·시크릿은 `.env` 파일에만 보관한다. 핸드오프 파일·CLAUDE.md·스크립트·마크다운 등 **어떤 파일에도 키 값을 직접 기재하지 않는다.** 파일에서 키를 언급할 땐 변수명만(`OPENAI_API_KEY=` 형태).
+
+**근거:** 핸드오프·설정 파일은 gitignore 대상이 아닐 수 있어 git에 그대로 올라간다. 한 번 커밋된 키는 history에 남는다.
+
+## [16] GIT CWD & SYNC DISCIPLINE — cd 의존 금지 · 미push 확인
+
+[12]와 같은 계열의 drift 방지.
+
+1. **CWD 묵시 가정 금지:** 서브모듈/멀티스텝 git은 `git -C <절대경로>` 또는 같은 명령줄(`cd <root> && git …`)에서 루트 복귀를 명시한다. 단계 전환 직전 `pwd` raw 확인.
+2. **`git status`만으로 완료 판정 금지:** `git status`는 "커밋 안 된 변경"만 보여주고 "커밋됐지만 미push인 커밋"은 못 본다. save/동기화 판정 시 `git rev-list --left-right --count origin/<branch>...HEAD`까지 확인한 raw 출력 위에서만 "동기화 완료" 결론. [10]의 git 버전.

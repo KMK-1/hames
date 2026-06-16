@@ -269,6 +269,23 @@ There is no auto-rotation by design — it's a debug log, not production telemet
 
 ---
 
+## Model-discipline rules (not hooks)
+
+Not every harness rule is a hook. Some failure modes can't be caught by pattern-matching a tool call — they need the model's own judgment. `harness_engineering.md` sections `[11]–[16]` are these behavioral rules:
+
+| Section | Rule | Guards against |
+|---|---|---|
+| `[11]` SCOPE DISCIPLINE | No self-authorized side-actions outside the approved task | Unrequested backup branches, "just in case" extra outputs, blanket `replace_all` |
+| `[12]` GIT RESET PRE-FLIGHT | Dump `pwd` + `git log -1` + branch before `reset`/`rebase`/`clean`; restore via exact reflog SHA | Wrong-CWD resets, submodule cascade, `HEAD~N` guesswork |
+| `[13]` DEBUGGING TRIPWIRE | Root-cause first; one hypothesis at a time; stop after 3 same-symptom failures | Shotgun fixes, infinite retry loops |
+| `[14]` FACT GROUNDING | Never invent products/numbers/claims absent from the source; label guesses `[추정]` | Hallucinated facts in deliverables |
+| `[15]` SECRET HANDLING | API keys live only in `.env`; never write a key value into any other file | Secrets committed to git |
+| `[16]` GIT CWD & SYNC | Name the CWD for multi-step git; don't call sync "done" on `git status` alone (check unpushed commits) | Lost commits, false "synced" claims |
+
+These overlap the hook layer where machine enforcement is possible (e.g., `compliance_auditor.js` can pattern-block some dangerous git commands), but the residual judgment stays with the model. They live in the harness module because they share its purpose: keeping the system resistant to uncontrolled drift.
+
+---
+
 ## Why this design
 
 Hooks are not an exotic concept — every CI system uses them. The novel claim Hames makes is that **safety rules for AI work need the same enforcement guarantees as safety rules for code work**. Saying "don't `rm -rf`" in a prompt is the equivalent of saying "don't introduce regressions" in a CONTRIBUTING file. Both are necessary. Neither is sufficient.

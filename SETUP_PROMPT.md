@@ -1,13 +1,13 @@
 # Hames Setup Prompt
 
-> **For humans:** Copy everything below the line. Paste into Claude Code, Codex CLI, Gemini CLI, or any modern AI client with shell-execution capability. The AI will perform a clean install of Hames v1.0 and report back.
+> **For humans:** Copy everything below the line. Paste into Claude Code, Codex CLI, Gemini CLI, or any modern AI client with shell-execution capability. The AI will perform a clean install of Hames and report back.
 >
 > Total time: ~3 minutes (mostly waiting for `npm install`).
 > Required: Node.js 18+, Python 3.10+, Git 2.30+, internet access.
 
 ---
 
-You are setting up **Hames v1.0** for the operator. Hames is a workspace-first orchestration framework for multi-model AI workflows. Source: `https://github.com/baek-labs/hames`.
+You are setting up **Hames** for the operator. Hames is a workspace-first orchestration framework for multi-model AI workflows. Source: `https://github.com/baek-labs/hames`.
 
 Execute the following steps **in order**. Stop at the first failure and report:
 - which step failed,
@@ -77,7 +77,7 @@ If `failed > 0`: read the failure list, attempt the suggested remediation (e.g.,
 Tell the operator:
 
 ```
-Hames v1.0 installed at: <path>
+Hames installed at: <path>
 
 Try these next:
   1. Open this directory in your AI client (Claude Code / Codex / Gemini CLI).
@@ -94,7 +94,7 @@ Documentation:
   - docs/01-06       (per-module technical reference)
   - docs/glossary.md (term definitions)
 
-Status: frozen reference implementation. PRs not actively monitored. MIT License.
+Status: actively maintained reference implementation, fork-first. MIT License.
 ```
 
 ---
@@ -117,4 +117,4 @@ If any step fails:
 
 ---
 
-*This prompt is part of Hames v1.0. Source: https://github.com/baek-labs/hames/blob/main/SETUP_PROMPT.md*
+*This prompt is part of Hames. Source: https://github.com/baek-labs/hames/blob/main/SETUP_PROMPT.md*

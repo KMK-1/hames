@@ -18,11 +18,15 @@ Terms used across Hames documentation. Listed alphabetically.
 
 **Critical Action** — One of `DELETE_FILE`, `OVERWRITE_EXISTING`, `SEND_EMAIL`, `DEPLOY_CODE`, `EXECUTE_SHELL`, `MOVE_FILE`. Requires explicit user approval before execution.
 
+**CRITICAL_SPARRING** — The rule that the COO is a critical sparring partner, not a yes-man: proposals are weighed (agree / partly / disagree, with reasons) and trade-offs surfaced before execution. Defined in `prompt_engineering.md` [1].
+
 **Defense Line** — One of four layered enforcement mechanisms:
 1. Mandatory full read of six core files
 2. Confirmation block in first response
 3. PreToolUse hook verifies signatures in transcript
 4. Wrapper script pre-injects rule content for headless invocations
+
+**DESIGN_APPROVAL_GATE** — For high-complexity, irreversible, or code/large-document work, the requirement to present the design (approach + scope + output shape) and get approval before building. Defined in `prompt_engineering.md` [3].
 
 **FIXED LOAD ORDER** — The mandatory sequence for loading workspace context: workspace `CLAUDE.md` → `_Master/` → `_Index.md` → task-specific files.
 
@@ -49,6 +53,8 @@ Terms used across Hames documentation. Listed alphabetically.
 **PreToolUse Hook** — A hook that fires before a tool runs. Non-zero exit blocks the tool.
 
 **Rational Materialism** — The system's stated philosophy: every rule has an articulated reason (rational) backed by concrete enforcement (material).
+
+**Scope Discipline** — The rule (`harness_engineering.md` [11]) against self-authorized side-actions outside the approved task: no unrequested backup branches, no "just in case" extra outputs, no blanket `replace_all`. Extra safety steps are reported for approval *before* execution, not after.
 
 **Session Lock / Workspace Lock** — When ON via `/lock <workspace>`, blocks file writes outside the active workspace. SYSTEM_ADMIN paths remain writable.
 

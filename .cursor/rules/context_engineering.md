@@ -36,6 +36,7 @@ CWD가 루트(`{{HAMES_ROOT}}`)와 일치하면 → **HAMES ROOT 모드**.
 자연어 해석 규칙 (단일 정의 위치):
 - `HamesSystem 적용` → 규칙 활성화 확인만. 스크립트 실행·파일 생성 없음. advisory mode (lock OFF) 유지.
 - `<Workspace> 모드로` → workspace 전환만 수행 (lock OFF). `<Workspace>`: INVEST / BUSINESS / COMPANY / HOBBY
+- `<경로/워크스페이스>로 이동` → 실제 `cd <경로>`를 Bash로 실행해 셸 작업 디렉토리를 변경한다. 컨텍스트 전환·파일 로드만 하고 끝내지 않는다("이동"은 물리적 디렉토리 이동을 의미하며 단순 모드 전환과 구별). 이동 후 `pwd`로 확인.
 - `<Workspace> 모드로 고정` → advisory lock 선언 (문서 수준). 실제 hook 차단은 `/lock <workspace>` 커맨드로만 활성화됨.
 - `/lock <workspace>` → `.claude/.workspace_lock` 갱신 + 워크스페이스 컨텍스트 로드 + PreToolUse hook 차단 활성화. 격리 도메인 패턴은 `docs/04_workspace_model.md` 참조.
 - `고정 해제` / `lock 해제` / `unlock` → 에이전트가 `.claude/.workspace_lock`을 `{"workspace": null, "locked": false}`로 업데이트. hook 차단 비활성화.
@@ -86,6 +87,7 @@ CWD가 루트(`{{HAMES_ROOT}}`)와 일치하면 → **HAMES ROOT 모드**.
 - `_Master`는 core context를 제공한다.
 - `_Index.md`는 현재 파일 지도로 사용한다.
 - task-specific files는 위 세 층을 확인한 뒤 필요한 것만 선별적으로 로드한다.
+- `_Master` / `_Index.md`가 해당 워크스페이스에 없으면 그 층은 skip하고 다음 층으로 진행한다(부재는 오류가 아님).
 - 전체 파일 소진적 로드 금지.
 - `00_Inbox`는 기본 로딩 우선순위가 아니다.
 - AI_COMM handoff는 사용자가 명시적으로 모델 전환을 요구한 경우에만 별도로 로드한다.

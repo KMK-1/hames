@@ -167,6 +167,22 @@ External validation (Perplexity, web search) is encouraged for `Marketer` becaus
 
 ---
 
+## Verifying sub-agent output
+
+When you delegate **external identifier or fact collection** (paper PMIDs, DOIs, authors, citations) to a sub-agent, treat hallucination as the default and verify:
+
+1. Identifiers come **only from tool-call results** — if the model typed a PMID/DOI into prose, treat it as hallucinated.
+2. **Machine-verify after collection** — diff the identifiers on disk against the actual tool responses (the **Negative Claim Verification** rule applied to sub-agents). Don't trust a sub-agent's "verified / self-corrected" self-report; the parent re-checks.
+3. For bulk collection, copy fields from cached tool JSON with a script rather than letting an LLM transcribe them.
+
+This is `agent_engineering.md` [8]. Sub-agents widen throughput but also widen the hallucination surface — the parent owns verification.
+
+### Description convention
+
+Agent and skill `description` fields state **trigger conditions only** ("when to invoke" — symptoms, situations, request examples), never a summary of the internal workflow. A workflow-summary description gives the model a shortcut to skip the body. (`agent_engineering.md` [3].)
+
+---
+
 ## AI_COMM — the model handoff buffer
 
 When you switch models (Claude → Codex, Codex → Gemini), there is a continuity problem: the new model has none of the conversation context.
@@ -248,7 +264,7 @@ Some agent calls should reach beyond the model:
 - **CFO / CSO** — may invoke external validation for high-stakes assumptions
 - **CTO** — only when the task involves a library/API the model might be wrong about (use Context7 or similar doc fetch)
 
-The system has a `/search` command (Perplexity-backed) that any agent can invoke. There is also a `redteam` and `extract` mode for OpenAI Specialist (`arsenal/openai_specialist.py`) — use selectively.
+The system has a `/search` command (Perplexity-backed) that any agent can invoke. **Perplexity cost gate:** the paid `perplexity_tool.js` is used only when the operator explicitly asks for "perplexity" or calls `/search` — otherwise reach for the free built-in WebSearch / WebFetch first. There is also a `redteam` and `extract` mode for OpenAI Specialist (`arsenal/openai_specialist.py`) — use selectively.
 
 External validation is not free (latency, cost). The decision to validate is a Level-1 agent decision, not a default.
 

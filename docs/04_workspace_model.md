@@ -43,7 +43,7 @@ workspaces/<NAME>/
 └── <subprojects>/    ← whatever fits your work
 ```
 
-The three anchor elements (`CLAUDE.md`, `_Master/`, `_Index.md`) are loaded **in that order** before any substantive file is touched. This is the **FIXED LOAD ORDER** rule from `context_engineering.md`.
+The three anchor elements (`CLAUDE.md`, `_Master/`, `_Index.md`) are loaded **in that order** before any substantive file is touched. This is the **FIXED LOAD ORDER** rule from `context_engineering.md`. If a workspace has no `_Master/` or `_Index.md`, that layer is skipped (absence is not an error) and loading continues to the next.
 
 The system ships with `workspaces/_scaffold/` as a starting template. Copy it:
 
@@ -71,6 +71,8 @@ When the lock is **OFF**, the model is on the honor system — it should stay in
 When the lock is **ON**, `.claude/hooks/workspace_guard.js` blocks any `Write`/`Edit`/`MultiEdit`/`NotebookEdit` outside the active workspace. SYSTEM_ADMIN paths (`arsenal/`, `.claude/`) remain writable regardless.
 
 To unlock: `/lock <workspace>` again with no name, or message `unlock` / `lock 해제`.
+
+A related navigation trigger, `<path/workspace>로 이동` ("move to <X>"), goes further than a mode switch: it runs an actual `cd` to change the shell working directory (confirmed with `pwd`), not just a context swap. Defined in `context_engineering.md` [2].
 
 ---
 

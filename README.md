@@ -5,8 +5,8 @@
 A strategic operating system for AI engineers running a personal stack of agents across Claude Code, Codex, and Gemini CLI. Production-grade safety guarantees backed by hooks, not exhortations.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-frozen%20reference-blue)](#status)
-[![Version](https://img.shields.io/badge/version-v1.0-green)](https://github.com/baek-labs/hames/releases)
+[![Status](https://img.shields.io/badge/status-actively%20maintained-brightgreen)](#status)
+[![Version](https://img.shields.io/badge/version-v1.1-green)](CHANGELOG.md)
 
 > **Hames is workspace-first, not agent-first.** Its primary unit is the workspace, not the tool call. This separates Hames from typical agent harnesses, which center on tool execution.
 >
@@ -86,14 +86,15 @@ The installer personalizes a few framework files with your local path and operat
 | [`docs/05_harness.md`](docs/05_harness.md) | Every hook, when it fires, when to bypass |
 | [`docs/06_agent_architecture.md`](docs/06_agent_architecture.md) | COO routing, Level-1/2 spawn protocol, AI_COMM |
 | [`docs/glossary.md`](docs/glossary.md) | Term definitions |
+| [`CHANGELOG.md`](CHANGELOG.md) | Version history |
 
 ---
 
 ## Status
 
-**Frozen reference implementation, v1.0.** Issues and PRs are not actively monitored. Fork freely (MIT License).
+**Actively maintained reference implementation.** Updated periodically as the system evolves — see [CHANGELOG.md](CHANGELOG.md) for version history. Issues and PRs may not be actively monitored — Hames is fork-first. Fork freely (MIT License).
 
-This is intentional. Maintaining a public framework is its own engineering job; the author chose not to take that on. The system is complete as shipped. Extend by forking.
+The rules and harness improve over time. You fork your own copy and pull upstream changes when they're useful; there is no forced migration. Extend by forking.
 
 ---
 

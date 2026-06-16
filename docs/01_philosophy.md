@@ -69,11 +69,11 @@ The COO does not write the file. The COO decides *which workspace* and *which ag
 - Sub-teams stay specialized (one team for finance, one for content, one for code)
 - Adding a new domain doesn't require teaching the executor a new role
 
-### 4. Frozen reference, not framework
+### 4. Reference implementation, not framework
 
-This repository is intentionally *not* a framework. There are no plugins, no extension points designed for external contribution. It is a reference implementation, complete and frozen at v1.0.
+This repository is intentionally *not* a framework. There are no plugins, no extension points designed for external contribution. It is a reference implementation you fork and own.
 
-**Why this design choice matters:** a frozen reference does not break. You can fork it, modify it for your needs, and never worry about an upstream change forcing migration. The cost is that you carry your fork forward yourself. For a personal AI stack, that's the right trade.
+**Why this design choice matters:** Hames is maintained — the rules and harness improve over time — but it is fork-first, not upgrade-first. You fork it, modify it for your needs, and pull in upstream changes only when you want them. There is no migration treadmill forced on you. The cost is that you carry your fork forward yourself. For a personal AI stack, that's the right trade.
 
 ---
 
@@ -125,9 +125,9 @@ Modularity. Each module covers one concern (prompt, context, agent, harness, enf
 
 Better prompts erode under model updates and context pressure. Hooks don't.
 
-### Why frozen at v1.0?
+### Is it maintained?
 
-Maintaining a public framework is its own engineering job. The author chose not to take that on. Forking is the supported extension model.
+Yes — the rules, harness, and docs are updated periodically as the system evolves. But it stays fork-first: there are no extension points designed for external contribution, and issues/PRs may not be actively monitored. Fork it and own your copy; pull upstream changes when they're useful to you.
 
 ### Where do I start?
 

@@ -212,4 +212,4 @@ bash scripts/init.sh
 
 ## Status
 
-This repository is a **frozen reference implementation** — version `v1.0`. Issues and PRs are not actively monitored. Fork freely (MIT License).
+This repository is an **actively maintained reference implementation** — updated periodically as the system evolves; see [CHANGELOG.md](CHANGELOG.md) for version history. Issues and PRs may not be actively monitored (Hames is fork-first). Fork freely (MIT License).

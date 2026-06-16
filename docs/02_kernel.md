@@ -47,6 +47,8 @@ Defines:
 - **System identity** — `Hames` (COO), `{{CEO_NAME}}` (you, the operator), and the five sub-agent teams (CFO, CSO, CBO, CTO, Marketer)
 - **Response style** — `ANTI_FLUFF`, dry, professional. No "I'd be happy to help" preambles.
 - **DEEP_TASK_PROTOCOL** — when complexity exceeds a threshold, the system creates a `<Task>_Worklog.md` with sections for plan / discoveries / progress / errors
+- **Behavioral principles** — `CRITICAL_SPARRING` (no yes-man agreement; weigh proposals and surface trade-offs first), `CODING_DISCIPLINE` (Think Before / Simplicity First / Surgical Changes / Goal-Driven), `PLAIN_LANGUAGE`, `TONE_TO_CEO`
+- **DESIGN_APPROVAL_GATE** — for high-complexity, irreversible, or code/large-document work, present the design and get approval before building
 
 The complexity rubric is explicit (10-point scale with named criteria). This is intentional: complexity should be a calculation, not a vibe.
 
@@ -77,6 +79,8 @@ Defines:
 - **Spawn protocol** — when COO must spawn a Level-1 agent, when COO handles directly, what handoff payload Level-1 needs
 - **Two-tier agent architecture** — Level-1 domain agents (CFO, CSO, CBO, CTO, Marketer) each delegate to specialized Level-2 sub-teams
 - **AI_COMM rule** — handoff buffer for cross-model continuity, used only on explicit model switch
+- **SUBAGENT OUTPUT VERIFICATION** — delegated identifier/fact collection (PMIDs, DOIs, citations) is verified against tool output, never trusted from a sub-agent's self-report
+- **DESCRIPTION convention** — agent/skill descriptions state trigger conditions only, never a workflow summary (a summarized description invites skipping the body)
 
 See `docs/06_agent_architecture.md` for the deep dive.
 
@@ -92,6 +96,7 @@ Defines:
 - **HARD ENFORCEMENT** — `Write` cannot overwrite existing files; `Edit` must be surgical; `replace_all` is blocked
 - **WORKSPACE LOCK** — `/lock <workspace>` activates a PreToolUse hook that blocks writes outside the active workspace
 - **NEGATIVE CLAIM VERIFICATION** — when the model concludes "no changes / clean / passed", it must dump raw evidence first
+- **Model-discipline rules** `[11]–[16]` — scope discipline, git-reset pre-flight, debugging tripwire, fact grounding, secret handling, git CWD/sync. Behavioral (not hook-enforced).
 
 See `docs/05_harness.md` for hook implementation.
 
@@ -107,6 +112,7 @@ This is the smallest module by line count and the largest by load-bearing impact
 - **Defense line 2** — first substantive response must contain a `Loaded:` and `Signatures:` line
 - **Defense line 3** — PreToolUse hook reads the transcript and blocks if defense line 2 is missing
 - **Defense line 4** — wrapper script pre-injects rule content for headless invocations
+- **Rule-file editing discipline** `[7]` — changes to loaded rule files must be additive; no compressing/summarizing loaded rules; defense-line signatures must never be removed or renamed
 
 See `docs/03_defense_lines.md`.
 

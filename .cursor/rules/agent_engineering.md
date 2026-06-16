@@ -175,6 +175,15 @@ Examples:
 - `Business + Marketer` → `marketer_hunter → marketer_executor`
 - `Company + CTO` → `cto_architect → cto_coder → cto_reviewer`
 
+### DESCRIPTION 규약 (에이전트 & 스킬)
+
+`.claude/agents/*.md`의 `description`, 스킬(슬래시 커맨드) description, `SKILL.md` 메타데이터에 공통 적용:
+
+- **트리거 조건 중심** — "언제 호출하는가"(증상·상황·요청 예시)만 적는다. 내부 워크플로우·실행 단계를 요약하지 않는다.
+- **근거:** 워크플로우를 요약한 description은 모델이 description만 읽고 본문을 건너뛰는 지름길을 만든다.
+- **형식:** "~할 때 사용" + 구체적 트리거 문구.
+- 신규 에이전트/스킬 작성 시 적용.
+
 ## [4] ORCHESTRATION RULES
 
 - COO는 Level 1 에이전트를 spawn한다. Level 2를 직접 spawn하지 않는다.
@@ -227,11 +236,20 @@ Do not invent branch isolation as a mandatory step.
 
 - `Marketer` tasks should use external validation when the task depends on live market facts.
 - `CFO` and `CSO` tasks may invoke external validation for high-stakes assumptions.
+- **PERPLEXITY COST GATE:** 고위험 결정에서는 가용한 모든 수단(WebSearch / WebFetch / Arsenal 도구 + 교차검증)을 동원한다. 단 `perplexity_tool.js`(유료 Perplexity API)는 사용자가 "퍼플렉시티"/"perplexity"를 명시한 경우에만 사용하고, 그 외에는 무료 내장 WebSearch / WebFetch로 대체한다.
 - `GPT` specialist usage should remain selective:
   - `redteam` for critique
   - `extract` for structured extraction
 
-## [8] EXECUTION SUMMARY
+## [8] SUBAGENT OUTPUT VERIFICATION — 식별자 환각 방지
+
+논문 PMID·DOI·저자 등 **외부 식별자/사실 수집을 서브에이전트에 위임**할 때는 환각 오염을 전제하고 검증한다.
+
+1. PMID/DOI/메타데이터는 **반드시 도구 호출 결과에서만** 취득. 모델이 본문에 식별자를 직접 타이핑하면 환각으로 간주.
+2. 수집 후 **기계 검증 필수** — 디스크 파일의 식별자 ↔ 실제 도구 응답을 대조(harness [10] 부정형 검증, raw 출력 확인). 서브에이전트의 "검증/자가수정 완료" 자기보고를 신뢰하지 말고 부모가 직접 대조.
+3. 대량 수집은 LLM 전사 대신 **캐시된 도구 JSON → 스크립트로 필드 복사**가 안전.
+
+## [9] EXECUTION SUMMARY
 
 Hames agent engineering is:
 

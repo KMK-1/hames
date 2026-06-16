@@ -173,6 +173,18 @@ Not a separate hook; it's a behavioral rule in `enforcement.md` section [4]. Goe
 
 ---
 
+## Rule-file editing discipline (an addendum)
+
+Editing the loaded rule files (`CLAUDE.md`, `.cursor/rules/*`) is itself governed — `enforcement.md` section [7]:
+
+- **Additive only.** Rule improvements are added, not rewritten away. Removing information from a loaded module can change model behavior.
+- **No compression of loaded rules.** Summarizing a 30-line section down to 6 lines is not a safe cleanup — the only safe removal is pure duplication that still lives somewhere in the loaded set.
+- **Signatures are sacred.** The six defense-line signature strings must never be deleted or renamed in the canonical files (see "Adapting for your fork" below — signature drift blocks all tool calls).
+
+This protects defense lines 1–3: the rules they enforce only work if the rules themselves aren't quietly eroded.
+
+---
+
 ## Failure recovery
 
 When defense line 3 blocks a tool call, the message format is:

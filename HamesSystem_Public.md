@@ -1,6 +1,6 @@
 # Hames System
 
-> Version: 5.5 [STRATEGIC_OS] | Last Updated: 2026-05-09
+> Version: 5.5 [STRATEGIC_OS] | Last Updated: 2026-06-16
 
 > **Reading order:** This file is a **narrative overview** — read it to grasp the whole system in one pass. For technical reference (per-module deep-dive, hook tables, spawn protocol details), see `docs/01_philosophy.md` through `docs/06_agent_architecture.md` and `docs/glossary.md`.
 >
@@ -211,6 +211,19 @@ AI는 "다 읽었다"고 말만 하고 실제로는 안 읽는 경우가 있다.
 
 위 패턴이 감지되면 hook이 차단하거나 사용자에게 명시 승인을 요구한다.
 
+### 9.4 행동 규율 룰 (모델 자체 규율)
+
+hook으로 기계 차단하기 어려운 의미 판단 영역은 룰 모듈(`harness_engineering.md` [11]~[16])에 행동 규율로 명시한다. hook이 못 잡는 drift를 모델 스스로 차단하는 층이다.
+
+- **SCOPE DISCIPLINE [11]**: 승인 범위 밖 자의적 사이드 액션(백업 브랜치 무단 생성, 묻지 않은 일괄 치환 등) 금지. 추가 안전조치는 실행 전 1줄 보고·승인.
+- **GIT RESET PRE-FLIGHT [12]**: `reset`/`rebase`/`clean` 직전 `pwd` + `git log -1` + 브랜치 raw 확인. 서브모듈 cascade 인지, 복원은 reflog의 정확 SHA로.
+- **DEBUGGING TRIPWIRE [13]**: 근본원인 우선·단일 가설·동일 증상 3-실패 시 정지 후 보고.
+- **FACT GROUNDING [14]**: 소스에 없는 제품·수치·주장 날조 금지. 추측은 `[추정]` 라벨.
+- **SECRET HANDLING [15]**: API 키는 `.env`에만. 다른 어떤 파일에도 키 값 직접 기재 금지.
+- **GIT CWD & SYNC DISCIPLINE [16]**: 멀티스텝 git은 CWD 명시. `git status`만으로 동기화 완료 판정 금지(미push 커밋 확인).
+
+이 규율들은 `prompt_engineering.md`의 DESIGN_APPROVAL_GATE·CRITICAL_SPARRING·CODING_DISCIPLINE과 한 묶음으로, "기계가 못 막는 판단 영역을 모델 규율로 메운다"는 설계를 따른다.
+
 ---
 
 ## 10) 물리적 차단과의 차이
@@ -395,4 +408,4 @@ Hames는 개인이 여러 AI 모델을 실무에 안정적으로 투입하기 �
 
 ---
 
-*Hames System v5.5 — Updated 2026-05-09*
+*Hames System v5.5 — Updated 2026-06-16*
