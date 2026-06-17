@@ -32,7 +32,7 @@ grep -l "HAMES SYSTEM KERNEL" CLAUDE.md 2>/dev/null && echo "HAMES_DETECTED"
 ls CLAUDE.md AGENTS.md GEMINI.md .claude.local.md 2>/dev/null
 ls .cursor/rules/*.md 2>/dev/null
 ls arsenal/CLAUDE.md 2>/dev/null
-find Anti -maxdepth 3 -name "CLAUDE.md" 2>/dev/null
+find workspaces -maxdepth 3 -name "CLAUDE.md" 2>/dev/null
 find <your-isolated-domains> <your-submodules> -maxdepth 3 -name "CLAUDE.md" 2>/dev/null
 ```
 

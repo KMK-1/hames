@@ -15,9 +15,6 @@
     "dist",
     "build",
     "_vendor",
-    "output",
-    "outputs",
-    "cache",
     ".turbo",
     ".vercel",
     ".cache"
@@ -34,6 +31,8 @@
   ],
 
   "content_skip_dirs": [],
+
+  "inventory_skip_dirs": ["__pycache__"],
 
   "duplicate_detection": {
     "exclude_filenames": [
@@ -52,7 +51,20 @@
     "workspace_prefixes": [
       "workspaces/"
     ],
-    "exempt_workspace_prefixes": [],
+    "exempt_workspace_prefixes": ["workspaces/Hobby"],
     "required_fields": ["Related", "Topic", "Type", "tags"]
+  },
+
+  "frontmatter_vocab": {
+    "_purpose": "verify_tasks.js frontmatter value vocabularies. related/topic/type: empty list = presence-checked only (any non-empty value accepted); populate to enforce a controlled vocabulary in your fork. canonical_tags: tags that always pass — non-canonical tags are still accepted if they look like proper nouns or contain non-ASCII (see isAllowedTag).",
+    "related": [],
+    "topic": [],
+    "type": [],
+    "canonical_tags": [
+      "Analysis", "Proposal", "Report", "Spec", "Strategy", "Internal_Guide",
+      "Competitors", "Risk", "Protocol", "Agenda", "USP", "Branding", "Design",
+      "Portfolio", "System", "Worklog", "MOC", "Investment", "Macro", "Insight",
+      "Hames_System"
+    ]
   }
 }

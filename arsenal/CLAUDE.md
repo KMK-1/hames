@@ -48,7 +48,7 @@
 | `naver_keyword_tool.js` | `node naver_keyword_tool.js "<seed1>" "<seed2>"` |
 | `seo_report.js` | `node seo_report.js` |
 | `compliance_auditor.js` | `node compliance_auditor.js <file>` (Hook) |
-| `verify_frontmatter_block.js` | PreToolUse Hook — Anti workspace frontmatter gate |
+| `verify_frontmatter_block.js` | PreToolUse Hook — workspace frontmatter gate |
 | `verify_tasks.js` | `node verify_tasks.js <file>` (Hook) |
 | `verify_edit_surgery.js` | `node verify_edit_surgery.js` (Hook) |
 | `update_arsenal_permissions.js` | `node update_arsenal_permissions.js` (Hook) |
@@ -82,7 +82,7 @@ PDF / PPT / DOCX / XLSX 작업 시:
 
 ---
 
-## API Keys — `.Arsenal/.env`
+## API Keys — `arsenal/.env`
 
 | 키 | 대상 |
 |---|---|

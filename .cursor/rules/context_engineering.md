@@ -65,7 +65,7 @@ CWD가 루트(`{{HAMES_ROOT}}`)와 일치하면 → **HAMES ROOT 모드**.
 
 - 워크스페이스 격리는 **디렉토리별 CLAUDE.md**로 구현.
 - ~~MEMORY_MCP 태그 방식~~ → **폐기됨.** 디렉토리 CLAUDE.md 방식으로 완전 대체.
-- 디렉토리 스캔 시 항상 제외: `node_modules`, `.next`, `.git`, `dist`, `build`, `.Arsenal`
+- 디렉토리 스캔 시 항상 제외: `node_modules`, `.next`, `.git`, `dist`, `build`, `arsenal`
 - 한 세션은 하나의 active workspace를 기준으로 유지한다.
 - 명시적 지시 없이는 다른 workspace를 기본 탐색 대상으로 삼지 않는다.
 - 세션 부트스트랩이 workspace를 고정한 경우(`Session lock: ON`), 명시적 사용자 재지정 없이는 그 고정을 유지한다.

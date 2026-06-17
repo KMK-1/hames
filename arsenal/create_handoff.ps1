@@ -9,7 +9,7 @@ param(
 )
 
 $HamesRoot   = "{{HAMES_ROOT}}"
-$InboxDir    = Join-Path $HamesRoot "Anti\999_AI_Communication\_Inbox"
+$InboxDir    = Join-Path $HamesRoot "ai_comm\_Inbox"
 
 $fileName   = "Handoff_$HandoffId.md"
 $outputFile = Join-Path $InboxDir $fileName

@@ -28,47 +28,29 @@ const WORKSPACES = [
     'workspaces/Hobby'
 ];
 
-const ALLOWED_RELATED = new Set([
-    'Notion Dashboard: Business Dashboard',
-    'Notion Dashboard: My Business Dashboard',
-    'Notion Dashboard: Asset Dashboard',
-    'Notion Dashboard: Sync'
-]);
+// Frontmatter value vocabularies \u2014 loaded from audit_exclusions.json so each fork
+// controls its own taxonomy. Empty list (default) \u2192 presence-checked only: any
+// non-empty value is accepted. Populate frontmatter_vocab.{related,topic,type} in
+// audit_exclusions.json to enforce a controlled vocabulary.
+const EXCLUSIONS_PATH = path.join(__dirname, 'audit_exclusions.json');
+function loadFrontmatterVocab() {
+    try {
+        const cfg = JSON.parse(fs.readFileSync(EXCLUSIONS_PATH, 'utf-8'));
+        return cfg.frontmatter_vocab || {};
+    } catch (_) {
+        return {};
+    }
+}
+const VOCAB = loadFrontmatterVocab();
 
-const ALLOWED_TOPIC = new Set([
-    'Report',
-    'Market Research',
-    'Meeting',
-    'Marketing',
-    'Internal Document',
-    'E_Book',
-    'Setup',
-    'Strategy',
-    'Sales',
-    'System',
-    'BizModel',
-    'Consulting',
-    'Compliance',
-    'Legal Document',
-    'Potential',
-    'Quotation'
-]);
+const ALLOWED_RELATED = new Set(VOCAB.related || []);
+const ALLOWED_TOPIC   = new Set(VOCAB.topic || []);
+const ALLOWED_TYPE    = new Set(VOCAB.type || []);
 
-const ALLOWED_TYPE = new Set([
-    'ExampleBrand',
-    'Project_D',
-    'Personal',
-    'Project_A',
-    'Second Job',
-    'Setup'
-]);
-
-// Canonical tags whitelist. The default set is intentionally minimal \u2014 common
-// document categories that work across most personal AI workspaces. Operators
-// extend this with their own taxonomy (product names, project codes, regions,
-// regulatory bodies, etc.) by overriding via audit_exclusions.json, or by
-// editing this file in their fork.
-const CANONICAL_TAGS = new Set([
+// Canonical tags that always pass. Non-canonical tags are still accepted when they
+// look like proper nouns or contain non-ASCII (see isAllowedTag), so this is a
+// convenience set, not a hard gate. Override via frontmatter_vocab.canonical_tags.
+const CANONICAL_TAGS = new Set(VOCAB.canonical_tags || [
     'Analysis', 'Proposal', 'Report', 'Spec', 'Strategy', 'Internal_Guide',
     'Competitors', 'Risk', 'Protocol', 'Agenda', 'USP', 'Branding', 'Design',
     'Portfolio', 'System', 'Worklog', 'MOC', 'Investment', 'Macro', 'Insight',
@@ -158,7 +140,7 @@ function stripWrappingQuotes(value) {
 }
 
 function isWorkspaceMarkdown(filePath) {
-    return /(?:^|\/)Anti\/0[0-3]_[^/]+\//.test(normalizePath(filePath));
+    return /(?:^|\/)workspaces\/[^/]+\//.test(normalizePath(filePath));
 }
 
 function isWorkspaceIndex(filePath) {
@@ -169,31 +151,19 @@ function isHobbyFile(filePath) {
     return normalizePath(filePath).includes('workspaces/Hobby/');
 }
 
-function isWilliamFile(filePath) {
-    return normalizePath(filePath).includes('workspaces/Investment/04_William/');
-}
-
-function isWebAssetsDesignDoc(filePath) {
-    const normalized = normalizePath(filePath);
-    return path.basename(filePath) === 'DESIGN.md' && normalized.includes('/Web_Assets/');
-}
-
 function isDatedMarkdown(filePath) {
     return /^\d{4}-\d{2}-\d{2}_.+\.md$/i.test(path.basename(filePath));
 }
 
 function isTaskMarkdownFile(filePath) {
-    const normalized = normalizePath(filePath);
     const baseName = path.basename(filePath);
 
     if (path.extname(filePath).toLowerCase() !== '.md') return false;
     if (!isWorkspaceMarkdown(filePath)) return false;
     if (isWorkspaceIndex(filePath)) return true;
     if (baseName === 'README.md' || baseName === 'CLAUDE.md' || baseName === 'Project_A.md' || /_MOC\.md$/i.test(baseName)) return false;
-    if (isWilliamFile(filePath)) return true;
-    if (isWebAssetsDesignDoc(filePath)) return true;
-    if (isHobbyFile(filePath)) return /Anti\/03_Hobby\/\d+_/.test(normalized);
-    return /Anti\/0[0-3]_[^/]+\/\d+_/.test(normalized) && isDatedMarkdown(filePath);
+    if (isHobbyFile(filePath)) return isDatedMarkdown(filePath);
+    return isDatedMarkdown(filePath);
 }
 
 function parseFrontmatter(filePath) {
@@ -268,17 +238,17 @@ function checkFrontmatter(filePath) {
         }
     });
 
-    if (typeof frontmatter.Related === 'string' && !ALLOWED_RELATED.has(frontmatter.Related)) {
+    if (ALLOWED_RELATED.size > 0 && typeof frontmatter.Related === 'string' && !ALLOWED_RELATED.has(frontmatter.Related)) {
         console.error(`[ERROR] Invalid Related value in ${filePath}: ${frontmatter.Related}`);
         hasErrors = true;
     }
 
-    if (typeof frontmatter.Topic === 'string' && !ALLOWED_TOPIC.has(frontmatter.Topic)) {
+    if (ALLOWED_TOPIC.size > 0 && typeof frontmatter.Topic === 'string' && !ALLOWED_TOPIC.has(frontmatter.Topic)) {
         console.error(`[ERROR] Invalid Topic value in ${filePath}: ${frontmatter.Topic}`);
         hasErrors = true;
     }
 
-    if (typeof frontmatter.Type === 'string' && !ALLOWED_TYPE.has(frontmatter.Type)) {
+    if (ALLOWED_TYPE.size > 0 && typeof frontmatter.Type === 'string' && !ALLOWED_TYPE.has(frontmatter.Type)) {
         console.error(`[ERROR] Invalid Type value in ${filePath}: ${frontmatter.Type}`);
         hasErrors = true;
     }

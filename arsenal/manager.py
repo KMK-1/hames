@@ -13,7 +13,7 @@ if hasattr(sys.stdout, 'reconfigure'):
 # Changes over v12:
 # - No-arg now == --all (full HamesSystem audit) instead of error
 # - Alias support: COMPANY / nested-project/sub-app / workspaces/Company 모두 허용
-# - Tier rule: ANTI workspaces deep, others light (override: workspace 루트에 _Index.md 있으면 deep)
+# - Tier rule: deep workspaces (default 4 + content_audit_workspaces) deep, others light
 # - Light tier skips filesystem hygiene (temp/archive/orphan/missing_indexes)
 # - Expanded SKIP_DIRS: _vendor, output, cache 추가 (vendor/build noise 제거)
 # - Arsenal registry audit section attached when scope == "all"
@@ -22,7 +22,7 @@ if hasattr(sys.stdout, 'reconfigure'):
 
 SCHEMA_VERSION = "index-2026-05-08"
 
-ANTI_WORKSPACE_PREFIXES = (
+DEEP_WORKSPACE_PREFIXES = (
     "workspaces/Investment",
     "workspaces/Business",
     "workspaces/Company",
@@ -47,7 +47,9 @@ INVENTORY_EXTENSIONS = {
     ".md", ".json", ".txt", ".html", ".py", ".toml", ".yml", ".yaml", ".js", ".css"
 }
 INVENTORY_SKIP_FILENAMES = {".env", "credentials.json", "token.json"}
-INVENTORY_SKIP_DIRS = {"analysis", "raw", "__pycache__"}
+# 인벤토리 스캔 제외 디렉토리 폴백. 범용 생성물(__pycache__)만 기본 — 콘텐츠성
+# 폴더(analysis/raw 등)는 기본 제외하지 않고 audit_exclusions.json 으로 사용자가 정의.
+_FALLBACK_INVENTORY_SKIP_DIRS = {"__pycache__"}
 
 # 예외 정의는 audit_exclusions.json 단일 출처에서 로드. 폴더 리네임/새 모드 문서/
 # 새 출력 폴더가 생기면 본 파일이 아니라 audit_exclusions.json 만 갱신한다.
@@ -56,18 +58,17 @@ _EXCLUSIONS_PATH = os.path.join(_ARSENAL_DIR, "audit_exclusions.json")
 
 # 정적 폴백 (JSON 로드 실패 시에만 사용). v13 기준 최소 안전망.
 _FALLBACK_COMMON_SKIP_DIRS = {
-    "_Archive", "98_Archive", "_Master", "_Agent", "99_Korean_Book",
-    "node_modules", "999_AI_Communication",
-    ".next", "dist", "build", "01_Novel",
-    "_vendor", "output", "cache", ".turbo", ".vercel", ".cache",
+    "_Archive", "_Master", "_Agent",
+    "node_modules", "ai_comm",
+    ".next", "dist", "build",
+    "_vendor", ".turbo", ".vercel", ".cache",
 }
 _FALLBACK_META_SKIP_FILENAMES = {
     "README.md", "CLAUDE.md", "AGENTS.md", "GEMINI.md",
-    "_Index.md", "Project_A.md",
-    "Business_Overview.md", "Company_Dashboard.md",
+    "_Index.md", "_template.md",
     "HamesSystem_Public.md",
 }
-_FALLBACK_CONTENT_SKIP_DIRS = {"wall.st_william_mdFiles"}
+_FALLBACK_CONTENT_SKIP_DIRS = set()
 
 
 def _load_exclusions() -> Dict:
@@ -82,6 +83,10 @@ _EXCL = _load_exclusions()
 COMMON_SKIP_DIRS = set(_EXCL.get("common_skip_dirs") or _FALLBACK_COMMON_SKIP_DIRS)
 META_SKIP_FILENAMES = set(_EXCL.get("meta_skip_filenames") or _FALLBACK_META_SKIP_FILENAMES)
 CONTENT_SKIP_DIRS_DEFAULT = set(_EXCL.get("content_skip_dirs") or _FALLBACK_CONTENT_SKIP_DIRS)
+# 격리 도메인(자체 에이전트/hook 을 가진 advanced 워크스페이스) 디렉토리 이름 목록.
+# 루트 스캔 시 부모 walk 에서 제외한다. 기본 설치에는 없음(빈 리스트).
+ISOLATED_DOMAINS = set(_EXCL.get("isolated_domains") or [])
+INVENTORY_SKIP_DIRS = set(_EXCL.get("inventory_skip_dirs") or _FALLBACK_INVENTORY_SKIP_DIRS)
 _DUP = _EXCL.get("duplicate_detection") or {}
 DUP_EXCLUDE_FILENAMES = set(_DUP.get("exclude_filenames") or [])
 DUP_DATE_SERIES = bool(_DUP.get("treat_date_prefix_series_as_single", True))
@@ -94,14 +99,14 @@ class HamesAuditor:
         self.target_root = os.path.abspath(target_root)
         self.root_dir = os.path.abspath(root_dir)
 
-        # Determine if this is an Anti workspace
+        # Determine if this is a deep-tier workspace
         rel = os.path.relpath(self.target_root, self.root_dir).replace("\\", "/")
-        self.is_anti = any(
+        self.is_deep = any(
             rel == p or rel.startswith(p + "/")
-            for p in ANTI_WORKSPACE_PREFIXES
+            for p in DEEP_WORKSPACE_PREFIXES
         )
 
-        # Tier 결정: ANTI = deep, 그 외 = light. light 워크스페이스라도
+        # Tier 결정: deep 워크스페이스 = deep, 그 외 = light. light 워크스페이스라도
         # 루트에 _Index.md 가 있으면 deep 으로 승격(워크스페이스 계약을
         # 갖췄다는 신호로 본다).
         has_index = os.path.exists(
@@ -110,39 +115,40 @@ class HamesAuditor:
         self.has_index = has_index
         content_audit_workspaces = set(_EXCL.get("content_audit_workspaces") or [])
         inventory_index_workspaces = set(_EXCL.get("inventory_index_workspaces") or [])
-        self.tier = "deep" if (self.is_anti or rel in content_audit_workspaces) else "light"
-        self.runs_filesystem_checks = self.is_anti  # temp/archive/orphan/index
+        self.tier = "deep" if (self.is_deep or rel in content_audit_workspaces) else "light"
+        self.runs_filesystem_checks = self.is_deep  # temp/archive/orphan/index
         self.requires_inventory_index = rel in inventory_index_workspaces
         self.runs_index_inventory_checks = has_index and (
-            self.requires_inventory_index or not self.is_anti
+            self.requires_inventory_index or not self.is_deep
         )
 
         self.frontmatter_skip_filenames = set(META_SKIP_FILENAMES)
         # 본 어댑터의 컨텐츠 검사 활성 여부.
-        # Anti = 항상 ON. 그 외는 워크스페이스 루트에 _Index.md 가 있어
+        # deep 워크스페이스 = 항상 ON. 그 외는 워크스페이스 루트에 _Index.md 가 있어
         # 명시적 워크스페이스 계약을 갖춘 경우에만 ON.
         # 이 게이트가 OFF 면 frontmatter/footer/duplicate/wikilink 모두 skip.
-        self.runs_content_checks = self.is_anti or rel in content_audit_workspaces
+        self.runs_content_checks = self.is_deep or rel in content_audit_workspaces
         self.SKIP_DIRS = set(COMMON_SKIP_DIRS)
-        # 격리 도메인: 부모 스캔에서 제외 (자기 자신을 직접 타겟할 때만 들어감)
+        # 격리 도메인: 루트 스캔 시 부모 walk 에서 제외 (자기 자신을 직접
+        # 타겟할 때만 진입). 목록은 audit_exclusions.json "isolated_domains".
         if rel == "." or rel == "":
-            # isolated domains and personal submodules: configure via audit_exclusions.json
+            self.SKIP_DIRS |= ISOLATED_DOMAINS
 
         # 부모 스캔에서 child 워크스페이스 경로 제외 (중복 집계 방지)
         self.child_excludes = set(child_excludes or [])
 
         self.SKIP_PATHS = {
-            ".Arsenal", ".git", ".vscode", "999_AI_Communication",
+            "arsenal", "ai_comm", ".git", ".vscode",
         }
         if rel == "." or rel == "":
-            # isolated domains and personal submodules: configure via audit_exclusions.json
+            self.SKIP_PATHS |= ISOLATED_DOMAINS
 
         self.CONTENT_SKIP_DIRS = set(CONTENT_SKIP_DIRS_DEFAULT)
 
         self.report: Dict = {
             "target": rel,
             "tier": self.tier,
-            "is_anti_workspace": self.is_anti,
+            "is_deep_workspace": self.is_deep,
             "audit": {
                 "missing_frontmatter": [],
                 "footer_missing": [],
@@ -323,8 +329,8 @@ class HamesAuditor:
         rel_root = os.path.dirname(rel_path_norm)
         in_content_skip = any(skip in rel_root for skip in self.CONTENT_SKIP_DIRS)
 
-        # Anti-workspace filesystem checks
-        if self.is_anti and not is_meta and not in_content_skip:
+        # deep-workspace filesystem checks
+        if self.is_deep and not is_meta and not in_content_skip:
             current_time = time.time()
             mtime = os.path.getmtime(file_path)
             age_days = (current_time - mtime) / (60 * 60 * 24)
@@ -454,8 +460,8 @@ class HamesAuditor:
                 self.report["index_inventory_unlisted"].append(rel)
 
     def run_audit(self, print_output: bool = True):
-        # Temp files (Anti only) — separate walk before .md analysis
-        if self.is_anti:
+        # Temp files (deep only) — separate walk before .md analysis
+        if self.is_deep:
             for root, dirs, files in os.walk(self.target_root):
                 dirs[:] = [
                     d for d in dirs
@@ -562,9 +568,9 @@ def _compute_child_excludes(roots: List[str], root_dir: str) -> Dict[str, List[s
 def _arsenal_registry_audit(root_dir: str) -> Dict:
     """
     arsenal/CLAUDE.md 레지스트리에 등재된 도구가 실제로 존재하는지,
-    그리고 .Arsenal 안에 있지만 레지스트리에 누락된 도구가 있는지 검사.
+    그리고 arsenal/ 안에 있지만 레지스트리에 누락된 도구가 있는지 검사.
     """
-    arsenal_dir = os.path.join(root_dir, "Anti", ".Arsenal")
+    arsenal_dir = os.path.join(root_dir, "arsenal")
     arsenal_md = os.path.join(arsenal_dir, "CLAUDE.md")
     result = {
         "missing_files": [],

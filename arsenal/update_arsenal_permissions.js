@@ -3,7 +3,7 @@
  * Arsenal 스크립트 변경 시 settings.local.json 허용 목록 자동 갱신
  *
  * Hook 모드 (인수 없음): stdin에서 PostToolUse tool call JSON 읽음
- *   → .Arsenal/ 내 .js/.py 파일 Write 시에만 실행
+ *   → arsenal/ 내 .js/.py 파일 Write 시에만 실행
  * Manual 모드: node update_arsenal_permissions.js --force
  */
 
@@ -83,7 +83,7 @@ process.stdin.on('end', () => {
         const toolCall = JSON.parse(raw);
         const toolInput = toolCall.tool_input || toolCall.input || {};
         const filePath = (toolInput.file_path || '').replace(/\\/g, '/');
-        if (!filePath.includes('.Arsenal/')) { process.exit(0); }
+        if (!filePath.includes('arsenal/')) { process.exit(0); }
         if (!filePath.endsWith('.js') && !filePath.endsWith('.py')) { process.exit(0); }
         updatePermissions();
         process.exit(0);

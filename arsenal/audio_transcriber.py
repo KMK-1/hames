@@ -1,6 +1,6 @@
 """
 Hames OS — Audio Transcriber
-.Arsenal/audio_transcriber.py
+arsenal/audio_transcriber.py
 
 faster-whisper(large-v3) 기반 로컬 음성 전사 도구.
 회의 녹음(.m4a/.mp3/.wav 등)을 텍스트로 변환한다.

@@ -22,7 +22,7 @@ HamesSystem 규칙 구조 점검은 `/doctor` 담당.
 - 중복 의심 파일 (날짜 접두사 제거 후 동일 파일명)
 - 위키링크 검증
 
-추가 (tier=`deep` & Anti 워크스페이스만):
+추가 (tier=`deep` 워크스페이스만):
 - 인덱스 미등재 고아 파일 / 임시 파일 / 아카이브 후보 (60일+) / `_Index.md` 누락
 
 ## Tier 결정 규칙
@@ -45,7 +45,7 @@ python arsenal/manager.py --all
 ```
 
 `.claude/workspace_paths.json` 의 등록된 모든 워크스페이스(존재하는 것만) +
-`.Arsenal` 도구 레지스트리(`arsenal_registry_audit`) 점검.
+`arsenal/` 도구 레지스트리(`arsenal_registry_audit`) 점검.
 중첩된 child 워크스페이스(예: nested-project/sub-app)는 부모 스캔에서 제외하여 중복 집계 방지.
 
 ### 특정 워크스페이스 지정
@@ -70,10 +70,10 @@ python arsenal/manager.py <target>
 | 프론트매터 이슈 | `missing_frontmatter` | 필드 누락 + 순서 오류 |
 | 푸터 누락 | `footer_missing` | `## 관련노트` 미존재 |
 | 값 인벤토리 | `value_inventory` | 비일관 값 탐지용 전체 현황 |
-| 고아 파일 | `orphaned_files` | `_Index.md` 미등재 (Anti only) |
-| 임시 파일 | `temp_files` | 즉시 삭제 제안 가능 (Anti only) |
-| 아카이브 후보 | `archive_candidates` | CEO 승인 후 이동 (Anti only) |
-| 인덱스 누락 | `missing_indexes` | 워크스페이스에 `_Index.md` 없음 (Anti only) |
+| 고아 파일 | `orphaned_files` | `_Index.md` 미등재 (deep only) |
+| 임시 파일 | `temp_files` | 즉시 삭제 제안 가능 (deep only) |
+| 아카이브 후보 | `archive_candidates` | CEO 승인 후 이동 (deep only) |
+| 인덱스 누락 | `missing_indexes` | 워크스페이스에 `_Index.md` 없음 (deep only) |
 | 중복 의심 | `potential_duplicates` | CEO 단일화/삭제 결재 요청 |
 | 링크 검증 | `links_found_for_agent_verification` | 에이전트가 경로·워크스페이스 직접 확인 |
 

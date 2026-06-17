@@ -233,7 +233,7 @@ Hames는 Harness Engineering 시스템이다. 다만 OS 수준의 물리적 완�
 현재 Hames가 제공하는 인프라 레벨 차단:
 
 - **시그니처 검증** — 모델이 6개 룰 파일 안 읽고 도구 호출 시도 시 Hook이 즉시 차단(exit 2). 단순 권고가 아니라 실제 BLOCK.
-- **워크스페이스 쓰기 차단 (session-scoped)** — `/lock <workspace>` 활성화 시 `workspace_guard.js` PreToolUse Hook이 활성 워크스페이스 외부 파일 쓰기를 실제로 막는다. 읽기는 항상 허용, 공용 인프라(`.Arsenal`, `.claude`, `.codex`, `.gemini`, `.agents`)는 lock 무관 항상 열려 있음. `session_capture.js`가 각 Claude Code 창의 세션 ID를 포착해 lock을 창 단위(per-window)로 분리한다 — 창 A에서 건 lock이 창 B에 영향을 주지 않는다.
+- **워크스페이스 쓰기 차단 (session-scoped)** — `/lock <workspace>` 활성화 시 `workspace_guard.js` PreToolUse Hook이 활성 워크스페이스 외부 파일 쓰기를 실제로 막는다. 읽기는 항상 허용, 공용 인프라(`arsenal`, `ai_comm`, `.claude`, `.codex`, `.gemini`, `.agent`)는 lock 무관 항상 열려 있음. `session_capture.js`가 각 Claude Code 창의 세션 ID를 포착해 lock을 창 단위(per-window)로 분리한다 — 창 A에서 건 lock이 창 B에 영향을 주지 않는다.
 - **파이프라인 phase gate** — 격리 도메인의 production 명령(render, upload 등)을 실행하려면 로컬 gate 파일(`workflow/script_approved.json`, `render_approved.json`, `upload_approved.json`)이 있어야 한다. 없으면 `content_workflow_guard.js` / `automation_workflow_guard.js`가 Bash를 차단. Claude와 Codex 양쪽에서 동일 gate를 통과해야 한다.
 - **Cross-CLI 정규화** — `hook_adapter.js`가 Gemini(BeforeTool/AfterTool)·Codex(pre_tool_use)·Cursor(beforeShellExecution/afterFileEdit) 입력을 Claude Code 형식으로 통일해서 같은 hook 스크립트가 어디서 발동하든 동일하게 작동하도록 함.
 - **Codex hook surface 동기화** — `.codex/hooks.json`과 `.codex/config.toml`은 포맷이 다르지만 같은 managed hook command set을 공유한다. `/sync`가 두 파일을 repo-root 기반 경로로 정규화해 Codespaces에서도 깨지지 않게 한다.

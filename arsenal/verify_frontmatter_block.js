@@ -5,15 +5,15 @@
 // 설계 원칙:
 //   1. 단발성 — stdin JSON 1회 읽고 즉시 종료. 자체 retry 없음.
 //   2. 명확한 차단 메시지 — stderr 한 블록에 파일/누락필드/수정방법.
-//   3. tight scope — Write tool, .md 확장자, anti_workspace_prefixes 매칭만 검사.
+//   3. tight scope — Write tool, .md 확장자, workspace_prefixes 매칭만 검사.
 //      그 외 모든 도구/파일은 통과.
 //   4. 예외는 audit_exclusions.json 에서 단일 출처로 로드.
 //   5. frontmatter 검사만 차단. footer 누락은 stderr 경고 후 통과 (정책: 경고).
 //
 // 진입 패스:
 //   - tool_name != "Write" → 통과
-//   - file_path 가 anti_workspace_prefixes 미일치 → 통과
-//   - file_path 가 exempt_workspace_prefixes (03_Hobby) 매칭 → 통과
+//   - file_path 가 workspace_prefixes 미일치 → 통과
+//   - file_path 가 exempt_workspace_prefixes (workspaces/Hobby) 매칭 → 통과
 //   - filename 이 meta_skip_filenames 또는 _ 시작 → 통과
 //   - 경로에 common_skip_dirs 또는 content_skip_dirs 포함 → 통과
 //   - .md 가 아니면 통과
@@ -65,7 +65,10 @@ function pathContainsSegment(filePath, segment) {
 
 function matchesAnyPrefix(filePathRel, prefixes) {
     const norm = normalize(filePathRel);
-    return prefixes.some(p => norm === p || norm.startsWith(p + '/'));
+    return prefixes.some(p => {
+        const pp = p.replace(/\/+$/, '');
+        return norm === pp || norm.startsWith(pp + '/');
+    });
 }
 
 function getRelToProjectRoot(filePath) {
@@ -119,8 +122,8 @@ function main() {
 
     const excl = loadExclusions();
     const fmCfg = excl.frontmatter_blocking || {};
-    const antiPrefixes   = fmCfg.anti_workspace_prefixes
-        || ['workspaces/Investment', 'workspaces/Business', 'workspaces/Company'];
+    const workspacePrefixes = fmCfg.workspace_prefixes
+        || ['workspaces/'];
     const exemptPrefixes = fmCfg.exempt_workspace_prefixes
         || ['workspaces/Hobby'];
     const required       = fmCfg.required_fields
@@ -134,7 +137,7 @@ function main() {
     const filename  = path.basename(relToRoot);
 
     if (matchesAnyPrefix(relToRoot, exemptPrefixes)) pass();
-    if (!matchesAnyPrefix(relToRoot, antiPrefixes))  pass();
+    if (!matchesAnyPrefix(relToRoot, workspacePrefixes))  pass();
 
     if (metaSkip.has(filename)) pass();
     if (filename.startsWith('_')) pass();

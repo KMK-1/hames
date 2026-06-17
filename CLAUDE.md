@@ -100,7 +100,7 @@ All detailed operating behavior should be defined in the imported rule modules.
 
 ## Codex Session Override
 
-`{{HAMES_ROOT}}\Anti\999_AI_Communication\Memory\.hames_start_codex.md` is a handoff/resume bootstrap, not a default task source.
+`{{HAMES_ROOT}}\ai_comm\Memory\.hames_start_codex.md` is a handoff/resume bootstrap, not a default task source.
 
 The session bootstrap may:
 

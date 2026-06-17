@@ -463,13 +463,12 @@ function auditFile(filePath) {
     const fileName = path.basename(filePath);
 
     const normalizedPath = filePath.replace(/\\/g, '/');
-    const isWilliam = normalizedPath.includes('04_William');
-    const isHobby   = normalizedPath.includes('03_Hobby');
+    const isHobby   = normalizedPath.includes('workspaces/Hobby/');
 
-    const naming     = isWilliam || /^\d{4}-\d{2}-\d{2}_.+\.md$/.test(fileName);
-    const frontmatter = isHobby  || content.trim().startsWith('---');
-    const footer      = isHobby  || content.includes('## 관련노트');
-    const hasKorean = isWilliam || /[가-힣]/.test(content);
+    const naming      = /^\d{4}-\d{2}-\d{2}_.+\.md$/.test(fileName);
+    const frontmatter = isHobby || content.trim().startsWith('---');
+    const footer      = isHobby || content.includes('## 관련노트');
+    const hasKorean   = /[가-힣]/.test(content);
 
     const forbiddenTones = [
         /해요[!.?]?/g, /하세요/g, /네요[!.?]?/g, /같아요/g, /중이에요/g,

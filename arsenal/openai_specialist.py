@@ -1,6 +1,6 @@
 """
 Hames OS — OpenAI Specialist Tool
-.Arsenal/openai_specialist.py
+arsenal/openai_specialist.py
 
 Usage:
     python openai_specialist.py --role <role> --prompt "<query>" [options]
@@ -33,7 +33,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# .env 로드 (.Arsenal 디렉토리 기준)
+# .env 로드 (arsenal 디렉토리 기준)
 env_path = Path(__file__).parent / ".env"
 load_dotenv(dotenv_path=env_path)
 

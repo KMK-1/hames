@@ -23,7 +23,7 @@ PRIME_DIRECTIVE: Technical Truth, Modular Efficiency, & Scalable Logic.
   - Changes made / Testing results / Validation proof.
 - Arsenal 유지보수 패치, 버그 수정, 내부 스크립트 수정은 walkthrough.md 면제.
 - RCA (Root Cause Analysis): optional, only for complex debugging.
-- Arsenal reuse check: Can this be saved as a reusable script in `.Arsenal`?
+- Arsenal reuse check: Can this be saved as a reusable script in `arsenal`?
 
 ## EXECUTION MODE
 
@@ -59,6 +59,6 @@ CTO는 직접 설계하거나 코딩하거나 리뷰하지 않는다. 전문 팀
 
 ## TOOL PRIORITY
 - Arsenal 기존 스크립트 재사용 우선.
-- 신규 개발 시 `.Arsenal/python-pro/SKILL.md` 표준 준수.
+- 신규 개발 시 `arsenal/python-pro/SKILL.md` 표준 준수.
 - 복잡한 아키텍처 계획 시 chain-of-thought 내부 추론 사용."""
 name = "CTO"

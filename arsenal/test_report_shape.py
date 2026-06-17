@@ -73,7 +73,7 @@ INDEX_SINGLE_EXPECTED: Dict[str, type] = {
 }
 
 INDEX_WORKSPACE_KEYS = {
-    "target", "tier", "is_anti_workspace", "audit", "recommended_actions",
+    "target", "tier", "is_deep_workspace", "audit", "recommended_actions",
 }
 
 INDEX_AUDIT_KEYS = {

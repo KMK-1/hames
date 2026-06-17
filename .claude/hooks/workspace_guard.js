@@ -6,7 +6,7 @@
  * Lock ON  -> Write/Edit to files outside active workspace: blocked
  *           -> Bash with write patterns + other workspace path: blocked
  *           -> Read/Glob/Grep: always pass
- *           -> SYSTEM_ADMIN paths (.Arsenal, 999_AI_Communication, .claude): always pass
+ *           -> SYSTEM_ADMIN paths (arsenal, ai_comm, .claude): always pass
  * Lock OFF -> everything passes
  *
  * Lock format (session-scoped only — default/legacy 포맷은 더 이상 enforcement 대상 아님):
@@ -35,8 +35,8 @@ const AUDIT_LOG = path.join(ROOT, '.claude', 'workspace_audit.log');
 
 // SYSTEM_ADMIN paths: always writable regardless of lock
 const SYSTEM_ADMIN = [
-  path.join(ROOT, 'Anti', '.Arsenal'),
-  path.join(ROOT, 'Anti', '999_AI_Communication'),
+  path.join(ROOT, 'arsenal'),
+  path.join(ROOT, 'ai_comm'),
   path.join(ROOT, '.claude'),
 ];
 

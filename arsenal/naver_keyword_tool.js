@@ -19,7 +19,7 @@ if (!API_KEY || !SECRET || !CUSTOMER_ID) {
   process.exit(1);
 }
 
-const OUT_DIR = path.resolve(__dirname, '..', '01_Business', '01_Tech_Venture', 'Project_A', 'SEO');
+const OUT_DIR = path.resolve(__dirname, '..', 'workspaces', 'Business', 'SEO');
 const OUT_FILE = path.join(OUT_DIR, 'keywords.json');
 const SEED_FILE = path.join(OUT_DIR, 'seed_keywords.json');
 

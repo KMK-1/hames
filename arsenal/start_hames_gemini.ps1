@@ -12,7 +12,7 @@ if (Test-Path -LiteralPath $Utf8Bootstrap) {
 }
 
 $HamesRoot    = "{{HAMES_ROOT}}"
-$StartFile    = Join-Path $HamesRoot "Anti\999_AI_Communication\Memory\.hames_start_gemini.md"
+$StartFile    = Join-Path $HamesRoot "ai_comm\Memory\.hames_start_gemini.md"
 
 # --- Self-Contained Workspace Inference ---
 $searchPath = if ($TargetPath) { $TargetPath } else { (Get-Location).Path }
@@ -38,11 +38,11 @@ $loadOrderText = if ($workspacePath) {
 }
 
 $outputZone = switch ($workspace) {
-    "INVEST"   { "workspaces/Investment/03_Reports"  }
-    "BUSINESS" { "workspaces/Business"               }
-    "COMPANY"  { "workspaces/Company/06_Reports"     }
-    "HOBBY"    { "workspaces/Hobby/01_Novel"         }
-    default    { ""                               }
+    "INVEST"   { "workspaces/Investment" }
+    "BUSINESS" { "workspaces/Business"    }
+    "COMPANY"  { "workspaces/Company"     }
+    "HOBBY"    { "workspaces/Hobby"       }
+    default    { ""                       }
 }
 
 $handoffReq = if ($Handoff) { "True" } else { "False" }

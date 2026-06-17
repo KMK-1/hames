@@ -4,12 +4,15 @@ import subprocess
 import sys
 
 
-WORKSPACE_MARKERS = {
-    "00_Investment": "workspaces/Investment",
-    "01_Business": "workspaces/Business",
-    "02_Company": "workspaces/Company",
-    "03_Hobby": "workspaces/Hobby",
-}
+def _detect_workspace(normalized: str):
+    """경로가 어떤 workspace 안에 있으면 'workspaces/<Name>' 반환, 아니면 None.
+    기본 4개뿐 아니라 사용자가 추가한 임의 워크스페이스도 처리한다."""
+    parts = normalized.split("/")
+    if "workspaces" in parts:
+        i = parts.index("workspaces")
+        if i + 1 < len(parts):
+            return "/".join(parts[: i + 2])
+    return None
 
 
 def main() -> int:
@@ -32,10 +35,7 @@ def main() -> int:
         root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
     normalized = file_path.replace("\\", "/")
-    workspace = next(
-        (ws for marker, ws in WORKSPACE_MARKERS.items() if marker in normalized),
-        None,
-    )
+    workspace = _detect_workspace(normalized)
     if not workspace:
         return 0
 

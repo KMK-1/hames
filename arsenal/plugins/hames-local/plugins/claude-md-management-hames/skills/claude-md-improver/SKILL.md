@@ -30,7 +30,7 @@ grep -l "HAMES SYSTEM KERNEL" CLAUDE.md 2>/dev/null && echo "HAMES_DETECTED"
 | **Kernel** | `./CLAUDE.md` | `@`-import 진입점. 5개 룰 모듈 + Arsenal 레지스트리만 펼침 | inline 추가 금지. import 외 내용 추가 시 모듈로 라우팅 |
 | **Rule modules** | `.cursor/rules/{prompt,context,agent,harness,enforcement}_engineering.md` | 단일 정의 위치 (single source of truth) | 학습은 토픽에 맞는 모듈로만 |
 | **Tool registry** | `arsenal/CLAUDE.md` | Arsenal 도구 명단 | 새 도구 추가 시만 갱신 |
-| **Workspace local** | `workspaces/Investment/CLAUDE.md`, `workspaces/Business/CLAUDE.md`, `workspaces/Company/CLAUDE.md`, `workspaces/Hobby/CLAUDE.md` | Anti 워크스페이스별 로컬 컨텍스트 | 로컬 학습만, 시스템 규칙 금지 |
+| **Workspace local** | `workspaces/Investment/CLAUDE.md`, `workspaces/Business/CLAUDE.md`, `workspaces/Company/CLAUDE.md`, `workspaces/Hobby/CLAUDE.md` | 워크스페이스별 로컬 컨텍스트 | 로컬 학습만, 시스템 규칙 금지 |
 | **Isolated domains** | `<DomainRoot>/CLAUDE.md` | 격리된 자체 시스템 | 자체 contract — 루트 규칙 강제 금지 |
 | **Personal local** | `.claude.local.md` | 개인 설정 (gitignored) | 팀 공유 안 됨 |
 
@@ -43,7 +43,7 @@ grep -l "HAMES SYSTEM KERNEL" CLAUDE.md 2>/dev/null && echo "HAMES_DETECTED"
 
 ## 스캔 제외 디렉토리
 
-`node_modules`, `.next`, `.git`, `dist`, `build`, `_vendor`, `output`, `cache`, `.turbo`, `.vercel`, `.cache`, `_Archive`, `98_Archive`, `999_AI_Communication`, `01_Novel`
+`node_modules`, `.next`, `.git`, `dist`, `build`, `_vendor`, `output`, `cache`, `.turbo`, `.vercel`, `.cache`, `_Archive`, `ai_comm`
 
 단 `arsenal/CLAUDE.md` 는 레지스트리 대상이므로 평가에 포함.
 
@@ -61,7 +61,7 @@ ls CLAUDE.md AGENTS.md GEMINI.md 2>/dev/null
 ls .cursor/rules/*.md 2>/dev/null
 
 # Workspace + isolated domain
-find Anti -maxdepth 3 -name "CLAUDE.md" 2>/dev/null
+find workspaces -maxdepth 3 -name "CLAUDE.md" 2>/dev/null
 find <your-isolated-domains> <your-submodules> -maxdepth 3 -name "CLAUDE.md" 2>/dev/null
 
 # Personal local

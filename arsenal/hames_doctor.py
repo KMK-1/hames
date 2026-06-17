@@ -147,7 +147,7 @@ $active = ($cpText -replace '[^\d]', '')
             return
 
         allows = data.get("permissions", {}).get("allow", [])
-        arsenal_path = os.path.join(self.root_dir, "Anti", ".Arsenal")
+        arsenal_path = os.path.join(self.root_dir, "arsenal")
 
         for entry in allows:
             reasons = []
@@ -177,8 +177,8 @@ $active = ($cpText -replace '[^\d]', '')
         """
         arsenal/CLAUDE.md에 등록된 파일들이 실제로 존재하는지 확인한다.
         """
-        arsenal_claude = os.path.join(self.root_dir, "Anti", ".Arsenal", "CLAUDE.md")
-        arsenal_dir = os.path.join(self.root_dir, "Anti", ".Arsenal")
+        arsenal_claude = os.path.join(self.root_dir, "arsenal", "CLAUDE.md")
+        arsenal_dir = os.path.join(self.root_dir, "arsenal")
 
         if not os.path.exists(arsenal_claude):
             self.report["arsenal_issues"].append("arsenal/CLAUDE.md not found")

@@ -3,7 +3,7 @@ param(
 )
 
 $HamesRoot  = "{{HAMES_ROOT}}"
-$ArchiveDir = Join-Path $HamesRoot "Anti\999_AI_Communication\_Archive"
+$ArchiveDir = Join-Path $HamesRoot "ai_comm\_Archive"
 
 if (-not (Test-Path $HandoffFile)) {
     Write-Host "[ERROR] File not found: $HandoffFile" -ForegroundColor Red

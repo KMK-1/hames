@@ -6,7 +6,7 @@ process.stdout.setEncoding('utf8');
 const fs = require('fs');
 const path = require('path');
 
-const SEO_DIR = path.resolve(__dirname, '..', '01_Business', '01_Tech_Venture', 'Project_A', 'SEO');
+const SEO_DIR = path.resolve(__dirname, '..', 'workspaces', 'Business', 'SEO');
 const POSTS_FILE = path.join(SEO_DIR, 'posts.json');
 const KEYWORDS_FILE = path.join(SEO_DIR, 'keywords.json');
 
@@ -118,7 +118,7 @@ function main() {
     '---',
     'Type: Project_A',
     'Topic: Marketing',
-    'Related: Notion Dashboard: My Business Dashboard',
+    'Related: -',
     `Generated: ${new Date().toISOString()}`,
     '---',
     ''
