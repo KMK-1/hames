@@ -358,7 +358,7 @@ Hames는 자주 쓰는 반복 작업을 슬래시 커맨드와 SKILL.md 표면�
 |---|---|---|
 | `/save` | Hames 루트 전체 변경분 커밋 → main push. 서브모듈 dirty/unpushed/upstream 미설정 감지 시 즉시 중단. 커밋 메시지 자동 생성. | git 명령 묶음 |
 | `/subpush <submodule> [msg]` | 서브모듈 push + Hames gitlink 갱신 + Hames push 자동화 | git 명령 묶음 |
-| `/sync [--dry-run]` | Codex 스킬 정본과 Antigravity 미러 동기화 + Gemini CLI TOML 커맨드 누락 검증/생성 + Codex hook surface 정규화 | `sync_skills.ps1` |
+| `/sync [--dry-run]` | Codex 스킬 정본과 Antigravity 미러 동기화 + Codex hook surface 정규화 | `sync_skills.ps1` |
 | `/lock <workspace>` | 워크스페이스 lock 활성화 | `.claude/.workspace_lock` 갱신 + workspace_guard hook |
 | `/doctor` | HamesSystem 무결성 점검 (권한·Arsenal 레지스트리·룰 모듈·워크스페이스 격리) | `hames_doctor.py` |
 | `/index` | 워크스페이스 콘텐츠 품질 + 인덱스 무결성 감사 | `manager.py` |
@@ -376,7 +376,6 @@ Hames는 자주 쓰는 반복 작업을 슬래시 커맨드와 SKILL.md 표면�
 | Cursor | `.cursor/rules/` 룰 통합 |
 | Antigravity | `.agent/skills/source-command-*/SKILL.md` (Codex 정본 미러) |
 | Codex App | `.codex/skills/source-command-*/SKILL.md` |
-| Gemini CLI | `.gemini/commands/*.toml` (TOML 형식 커맨드) |
 | Codex CLI | `.codex/skills/source-command-*/SKILL.md` (Codex App과 같은 정본 사용) |
 
 `/verify`는 PostToolUse hook이 자동 발동하는 `verify_tasks.js`와 중복이라 슬래시 커맨드에서 제거됐다.
@@ -390,7 +389,7 @@ SKILL.md 형식을 쓰는 현재 운영 표면은 `.codex/skills/`와 `.agent/sk
 2. 변경 후 `/sync` 호출 → `.agent/skills/` 자동 갱신
 3. `.agent/skills/`에 직접 편집 금지 (sync 시 덮어쓰여짐)
 
-`.claude/commands/*.md`(Claude Code 형식)와 `.gemini/commands/*.toml`(Gemini 형식)은 SKILL.md와 형식이 달라 byte-level 미러 관계가 아니다. 다만 `/sync`는 Codex 정본의 `source-command-*` 목록을 기준으로 Gemini CLI TOML 커맨드 누락을 검증하고, 생성 가능한 누락 항목은 만든다.
+`.claude/commands/*.md`(Claude Code 형식)는 SKILL.md와 형식이 달라 byte-level 미러 관계가 아니므로 별도로 유지한다.
 
 Codex hook 설정은 별도 sync 정책을 따른다. `.codex/hooks.json`과 `.codex/config.toml`은 파일 포맷이 달라 byte-level 미러가 아니라, managed hook command set만 `/sync`가 동일하게 맞춘다. `config.toml`의 `[agents.<name>]` registry는 유지하고, hook command는 모두 `$(git rev-parse --show-toplevel)` 기반으로 정규화한다.
 

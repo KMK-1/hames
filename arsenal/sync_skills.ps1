@@ -1,18 +1,15 @@
 <#
 .SYNOPSIS
-    Hames 슬래시 커맨드 스킬 디렉토리 Codex 정본 + Antigravity 미러 + Gemini CLI 커맨드 동기화.
+    Hames 슬래시 커맨드 스킬 디렉토리 Codex 정본 + Antigravity 미러 동기화.
 
 .DESCRIPTION
     스킬 형식(SKILL.md)을 사용하는 환경 중 Codex CLI/App은 같은
     .codex/skills 정본을 읽고, Antigravity용 .agent/skills만 미러한다.
-    Gemini CLI용 .gemini/commands/*.toml 표면도 Codex 정본의 source-command
-    목록과 맞는지 확인하고, 생성 가능한 누락 커맨드는 만든다.
     Codex hook 설정 표면(.codex/hooks.json, .codex/config.toml)도 같은
     repo-root 기반 command set으로 동기화한다.
 
     단일 소스: .codex/skills/   (Codex CLI/App 공용 정본)
     미러 타겟: .agent/skills/    (Antigravity)
-    Gemini CLI: .gemini/commands/*.toml
 
     참고:
       - .claude/commands/*.md  (Claude Code 형식, 다른 포맷이라 sync 대상 아님)
@@ -46,7 +43,6 @@ $Targets   = @(
 )
 $CodexHooksJson  = Join-Path $HamesRoot ".codex\hooks.json"
 $CodexConfigToml = Join-Path $HamesRoot ".codex\config.toml"
-$GeminiCommands  = Join-Path $HamesRoot ".gemini\commands"
 
 if (-not (Test-Path $Source)) {
     Write-Error "[sync_skills] Source not found: $Source"
@@ -72,7 +68,6 @@ Write-Host ""
 
 $totalCopied = 0
 $totalRemoved = 0
-$totalGeminiCreated = 0
 
 function Write-Utf8NoBom {
     param(
@@ -283,64 +278,6 @@ function Sync-CodexHookSurfaces {
     Write-Host ""
 }
 
-function New-GeminiCommandContent {
-    param([Parameter(Mandatory=$true)][string]$CommandName)
-
-    # No domain-specific command templates ship in the public repo.
-    # Users who add custom commands for their workspaces should provide
-    # their own .toml templates and skip this auto-fill path.
-    return $null
-}
-
-function Sync-GeminiCommandSurface {
-    Write-Host "$prefix Gemini CLI command surface: $GeminiCommands" -ForegroundColor Cyan
-
-    if (-not (Test-Path $GeminiCommands)) {
-        if ($DryRun) {
-            Write-Host "  [DRY-RUN] would create directory" -ForegroundColor Gray
-        } else {
-            New-Item -ItemType Directory -Path $GeminiCommands -Force | Out-Null
-            Write-Host "  created directory" -ForegroundColor Gray
-        }
-    }
-
-    $expected = $sourceSkills |
-        Where-Object { $_.Name -like "source-command-*" } |
-        ForEach-Object { $_.Name.Substring("source-command-".Length) } |
-        Sort-Object
-
-    $missing = @()
-    foreach ($name in $expected) {
-        $path = Join-Path $GeminiCommands "$name.toml"
-        if (Test-Path $path) {
-            Write-Host "  present: $name.toml" -ForegroundColor Gray
-            continue
-        }
-
-        $content = New-GeminiCommandContent -CommandName $name
-        if ($null -eq $content) {
-            $missing += "$name.toml"
-            Write-Host "  missing without generator: $name.toml" -ForegroundColor Red
-            continue
-        }
-
-        if ($DryRun) {
-            Write-Host "  [DRY-RUN] would create: $name.toml" -ForegroundColor Green
-        } else {
-            Write-Utf8NoBom -Path $path -Content ($content + "`n")
-            Write-Host "  created: $name.toml" -ForegroundColor Green
-        }
-        $script:totalGeminiCreated++
-    }
-
-    if ($missing.Count -gt 0) {
-        throw "[sync_skills] Gemini CLI command surface missing files: $($missing -join ', ')"
-    }
-
-    Write-Host "$prefix VERIFY PASS: Gemini CLI command surface aligned with source-command list" -ForegroundColor Green
-    Write-Host ""
-}
-
 foreach ($target in $Targets) {
     Write-Host "$prefix 동기화 → $target" -ForegroundColor Yellow
 
@@ -418,7 +355,6 @@ foreach ($target in $Targets) {
 }
 
 Sync-CodexHookSurfaces
-Sync-GeminiCommandSurface
 
 # 검증 (DryRun 아닐 때만)
 if (-not $DryRun) {
@@ -438,4 +374,4 @@ if (-not $DryRun) {
 }
 
 Write-Host ""
-Write-Host "$prefix 요약: copied=$totalCopied removed_orphans=$totalRemoved gemini_created=$totalGeminiCreated" -ForegroundColor Cyan
+Write-Host "$prefix 요약: copied=$totalCopied removed_orphans=$totalRemoved" -ForegroundColor Cyan
