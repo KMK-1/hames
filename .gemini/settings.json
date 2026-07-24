@@ -33,6 +33,16 @@
         ]
       },
       {
+        "matcher": "write_file|replace|run_shell_command|write_to_file|replace_file_content|multi_replace_file_content|run_command",
+        "hooks": [
+          {
+            "name": "task_contract_guard",
+            "type": "command",
+            "command": "node \"{{HAMES_ROOT_POSIX}}/.claude/hooks/hook_adapter.js\" \"{{HAMES_ROOT_POSIX}}/.claude/hooks/task_contract_guard.js\""
+          }
+        ]
+      },
+      {
         "matcher": "write_file|write_to_file",
         "hooks": [
           {
@@ -71,6 +81,16 @@
             "name": "update_arsenal_permissions",
             "type": "command",
             "command": "node \"{{HAMES_ROOT_POSIX}}/.claude/hooks/hook_adapter.js\" \"{{HAMES_ROOT_POSIX}}/arsenal/update_arsenal_permissions.js\""
+          }
+        ]
+      },
+      {
+        "matcher": "write_file|replace|run_shell_command|write_to_file|replace_file_content|multi_replace_file_content|run_command",
+        "hooks": [
+          {
+            "name": "task_contract_evidence",
+            "type": "command",
+            "command": "node \"{{HAMES_ROOT_POSIX}}/.claude/hooks/hook_adapter.js\" \"{{HAMES_ROOT_POSIX}}/.claude/hooks/task_contract_evidence.js\""
           }
         ]
       },

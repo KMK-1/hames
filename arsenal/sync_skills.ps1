@@ -84,6 +84,16 @@ function Get-TextOrEmpty {
     return [System.IO.File]::ReadAllText($Path, [System.Text.Encoding]::UTF8)
 }
 
+function Get-TreeManifest {
+    param([Parameter(Mandatory=$true)][string]$Root)
+    if (-not (Test-Path $Root)) { return @() }
+    return @(Get-ChildItem -Path $Root -Recurse -File | ForEach-Object {
+        $relative = $_.FullName.Substring($Root.Length).TrimStart('\', '/') -replace '\\', '/'
+        $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash
+        "$relative|$hash"
+    } | Sort-Object)
+}
+
 function Get-CodexHookCommandMap {
     $rootExpr = '$(git rev-parse --show-toplevel)'
     $adapter = "$rootExpr/.claude/hooks/hook_adapter.js"
@@ -91,11 +101,13 @@ function Get-CodexHookCommandMap {
         context_verifier = "node `"$adapter`" `"$rootExpr/.claude/hooks/context_verifier.js`""
         workspace_guard = "node `"$adapter`" `"$rootExpr/.claude/hooks/workspace_guard.js`""
         compliance_auditor = "node `"$adapter`" `"$rootExpr/arsenal/compliance_auditor.js`""
+        task_contract_guard = "node `"$adapter`" `"$rootExpr/.claude/hooks/task_contract_guard.js`""
         verify_frontmatter_block = "node `"$adapter`" `"$rootExpr/arsenal/verify_frontmatter_block.js`""
         verify_edit_surgery = "node `"$adapter`" `"$rootExpr/arsenal/verify_edit_surgery.js`""
         verify_tasks = "node `"$adapter`" `"$rootExpr/arsenal/verify_tasks.js`""
         update_arsenal_permissions = "node `"$adapter`" `"$rootExpr/arsenal/update_arsenal_permissions.js`""
         index_post_write_auditor = "python `"$rootExpr/arsenal/index_post_write_auditor.py`""
+        task_contract_evidence = "node `"$adapter`" `"$rootExpr/.claude/hooks/task_contract_evidence.js`""
         session_logger = "node `"$adapter`" `"$rootExpr/arsenal/session_logger.js`""
     }
 }
@@ -126,6 +138,14 @@ function New-CodexHooksJsonContent {
                     hooks = @([ordered]@{
                         type = "command"
                         command = $commands.compliance_auditor
+                    })
+                },
+                [ordered]@{
+                    matcher = "Write|Edit|MultiEdit|NotebookEdit|Bash"
+                    hooks = @([ordered]@{
+                        type = "command"
+                        command = $commands.task_contract_guard
+                        statusMessage = "Checking task contract scope..."
                     })
                 },
                 [ordered]@{
@@ -169,6 +189,14 @@ function New-CodexHooksJsonContent {
                     })
                 },
                 [ordered]@{
+                    matcher = "Write|Edit|MultiEdit|NotebookEdit|Bash"
+                    hooks = @([ordered]@{
+                        type = "command"
+                        command = $commands.task_contract_evidence
+                        statusMessage = "Recording task contract evidence..."
+                    })
+                },
+                [ordered]@{
                     matcher = "Write|Edit"
                     hooks = @([ordered]@{
                         type = "command"
@@ -190,11 +218,13 @@ function Set-CodexConfigHookCommands {
         'context_verifier\.js' = "command = '$($commands.context_verifier)'"
         'workspace_guard\.js' = "command = '$($commands.workspace_guard)'"
         'compliance_auditor\.js' = "command = '$($commands.compliance_auditor)'"
+        'task_contract_guard\.js' = "command = '$($commands.task_contract_guard)'"
         'verify_frontmatter_block\.js' = "command = '$($commands.verify_frontmatter_block)'"
         'verify_edit_surgery\.js' = "command = '$($commands.verify_edit_surgery)'"
         'verify_tasks\.js' = "command = '$($commands.verify_tasks)'"
         'update_arsenal_permissions\.js' = "command = '$($commands.update_arsenal_permissions)'"
         'index_post_write_auditor\.py' = "command = '$($commands.index_post_write_auditor)'"
+        'task_contract_evidence\.js' = "command = '$($commands.task_contract_evidence)'"
         'session_logger\.js' = "command = '$($commands.session_logger)'"
     }
 
@@ -228,11 +258,7 @@ function Sync-CodexHookSurfaces {
         return
     }
 
-    $hooksInfo = Get-Item $CodexHooksJson
-    $configInfo = Get-Item $CodexConfigToml
-    $sourceName = if ($hooksInfo.LastWriteTime -ge $configInfo.LastWriteTime) { ".codex/hooks.json" } else { ".codex/config.toml" }
-
-    Write-Host "$prefix Codex hook surfaces: source hint = $sourceName (newer file)" -ForegroundColor Cyan
+    Write-Host "$prefix Codex hook surfaces: deterministic managed hook map" -ForegroundColor Cyan
 
     $desiredHooks = New-CodexHooksJsonContent
     $currentHooks = Get-TextOrEmpty $CodexHooksJson
@@ -359,13 +385,13 @@ Sync-CodexHookSurfaces
 # 검증 (DryRun 아닐 때만)
 if (-not $DryRun) {
     $verifyPass = $true
+    $sourceManifest = Get-TreeManifest -Root $Source
     foreach ($target in $Targets) {
-        $diff = Compare-Object -ReferenceObject (Get-ChildItem $Source -Recurse | Select-Object -ExpandProperty Name) `
-                              -DifferenceObject (Get-ChildItem $target -Recurse | Select-Object -ExpandProperty Name) `
-                              -SyncWindow 0 -ErrorAction SilentlyContinue
+        $targetManifest = Get-TreeManifest -Root $target
+        $diff = Compare-Object -ReferenceObject $sourceManifest -DifferenceObject $targetManifest -SyncWindow 0
         if ($diff) {
             $verifyPass = $false
-            Write-Host "[sync_skills] VERIFY FAIL: $target — diff exists" -ForegroundColor Red
+            Write-Host "[sync_skills] VERIFY FAIL: $target — path/content hash diff exists" -ForegroundColor Red
         }
     }
     if ($verifyPass) {

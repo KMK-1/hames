@@ -58,6 +58,13 @@ alwaysApply: true
 - **저속 방지 카브아웃:** 복잡도 ≤ 8 또는 단순 수정/검색/git/소규모 문서는 게이트 면제 — 즉시 실행 (속도 우선).
 - **SCOPE 연계:** 게이트 통과 = 승인 범위 확정. 이후 `harness_engineering.md` [11] SCOPE DISCIPLINE이 범위 밖 사이드 액션을 차단한다.
 
+### 작업 계약 연계
+
+- DESIGN_APPROVAL_GATE가 발동하는 작업은 `/ready`로 실행 범위를 작업 공간 내 `.hames/contracts/_Active/<task-id>/` 패키지로 확정한 뒤, 현재 사용자가 `/go <task-id>`를 명시적으로 요청해야 실행한다.
+- 작업 계약의 정본은 `contract.json`이다. `plan.md`는 실행 안내이며, 검증 기록과 결과 보고는 범위를 늘리거나 승인을 대체하지 못한다.
+- 복잡도 ≤ 8인 작업은 기존처럼 즉시 실행한다. 단, 사용자가 `/ready`를 명시적으로 호출하면 복잡도와 무관하게 작업 계약 주기를 적용한다.
+- `DEFINED_CRITICAL_ACTIONS`에 해당하는 행동은 복잡도, 계약 상태, `/go` 여부와 무관하게 기존의 명시적 사용자 승인이 필요하다.
+
 ## [4] SKILL USAGE ETHICS
  
 - **PURPOSE:** 스킬(슬래시 커맨드)은 시스템 검증 및 특정 워크플로우 수행을 위한 정밀 도구임.

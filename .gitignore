@@ -34,7 +34,13 @@ arsenal/.youtube_oauth_token.json
 .claude/settings.local.json
 .claude/workspace_paths.json
 .claude/.context_verifier_disabled
+.claude/.task_contract_state.json
+.claude/task_contracts/
 .codex_tmp/
+
+# Task-contract transactional scratch files. Canonical workspace contracts stay tracked.
+**/.hames/contracts/**/.task-contract-*.tmp
+**/.hames/contracts/**/.task-contract.lock
 
 # ─── Logs ───────────────────────────────────────────────────────────────────
 *.log

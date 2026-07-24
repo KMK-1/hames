@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import os
+import tempfile
 import subprocess
 import sys
 from typing import Any, Dict, List, Tuple
@@ -24,7 +25,7 @@ from typing import Any, Dict, List, Tuple
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 
 # ─── 기대 스키마 정의 ────────────────────────────────────────────────────────
@@ -119,16 +120,38 @@ def parse_report(stdout: str) -> Dict[str, Any]:
     return json.loads(lines[1])
 
 
-def run_script(args: List[str]) -> Tuple[int, str, str]:
+def run_script(args: List[str], cwd: str = ROOT) -> Tuple[int, str, str]:
     proc = subprocess.run(
-        ["python"] + args,
-        cwd=ROOT,
+        [sys.executable] + args,
+        cwd=cwd,
         capture_output=True,
         text=True,
         encoding="utf-8",
         errors="replace",
     )
     return proc.returncode, proc.stdout, proc.stderr
+
+
+def run_manager_fixture(args: List[str]) -> Tuple[int, str, str]:
+    """Run /index shape checks against an isolated, deterministic workspace."""
+    with tempfile.TemporaryDirectory(prefix="hames-report-shape-") as fixture:
+        for rel in (
+            "workspaces/Investment",
+            "workspaces/Business",
+            "workspaces/Company",
+            "workspaces/Hobby",
+            "nested-project/sub-app",
+            ".claude",
+        ):
+            os.makedirs(os.path.join(fixture, rel), exist_ok=True)
+        with open(
+            os.path.join(fixture, ".claude", "workspace_paths.json"),
+            "w",
+            encoding="utf-8",
+        ) as registry:
+            json.dump({"COMPANY": "workspaces/Company"}, registry)
+        manager = os.path.join(ROOT, "arsenal", "manager.py")
+        return run_script([manager] + args, cwd=fixture)
 
 
 # ─── 테스트 케이스 ───────────────────────────────────────────────────────────
@@ -186,7 +209,7 @@ def test_doctor_workspace(errors: List[str]) -> None:
 
 
 def test_index_full(errors: List[str]) -> None:
-    rc, out, err = run_script(["arsenal/manager.py"])
+    rc, out, err = run_manager_fixture([])
     if rc != 0:
         fail("index_full", f"non-zero exit {rc}: {err[:200]}", errors)
         return
@@ -228,7 +251,7 @@ def test_index_full(errors: List[str]) -> None:
 
 
 def test_index_alias(errors: List[str]) -> None:
-    rc, out, err = run_script(["arsenal/manager.py", "COMPANY"])
+    rc, out, err = run_manager_fixture(["COMPANY"])
     if rc != 0:
         fail("index_alias", f"non-zero exit {rc}: {err[:200]}", errors)
         return
@@ -250,7 +273,7 @@ def test_index_alias(errors: List[str]) -> None:
 
 
 def test_index_path(errors: List[str]) -> None:
-    rc, out, err = run_script(["arsenal/manager.py", "nested-project/sub-app"])
+    rc, out, err = run_manager_fixture(["nested-project/sub-app"])
     if rc != 0:
         fail("index_path", f"non-zero exit {rc}: {err[:200]}", errors)
         return

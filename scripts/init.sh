@@ -191,7 +191,7 @@ if [ -f "$VERIFY" ]; then
     else
         echo ""
         echo "$prefix running install verification..."
-        if ! node "$VERIFY"; then
+        if ! node "$VERIFY" --mode installed; then
             echo "$prefix VERIFICATION FAILED. Inspect output above." >&2
             exit 1
         fi

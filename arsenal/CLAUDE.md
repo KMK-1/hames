@@ -47,6 +47,7 @@
 | `naver_blog_scraper.js` | `node naver_blog_scraper.js [blogId]` |
 | `naver_keyword_tool.js` | `node naver_keyword_tool.js "<seed1>" "<seed2>"` |
 | `seo_report.js` | `node seo_report.js` |
+| `task_contract.js` | `node arsenal/task_contract.js <create\|draft\|ready\|activate\|record-evidence\|review\|accept\|archive\|status\|validate\|guard> [options]` |
 | `compliance_auditor.js` | `node compliance_auditor.js <file>` (Hook) |
 | `verify_frontmatter_block.js` | PreToolUse Hook — workspace frontmatter gate |
 | `verify_tasks.js` | `node verify_tasks.js <file>` (Hook) |
@@ -54,6 +55,8 @@
 | `update_arsenal_permissions.js` | `node update_arsenal_permissions.js` (Hook) |
 | `session_logger.js` | PostToolUse Hook — `.session_log.jsonl` 기록 |
 | `.claude/hooks/workspace_guard.js` | PreToolUse Hook — 워크스페이스 잠금 집행 |
+| `.claude/hooks/task_contract_guard.js` | PreToolUse Hook — 활성 작업 계약 파일 범위 집행 |
+| `.claude/hooks/task_contract_evidence.js` | PostToolUse Hook — ACTIVE/REVIEW 작업 계약 증거 기록 |
 
 ---
 

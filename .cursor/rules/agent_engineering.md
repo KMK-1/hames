@@ -220,6 +220,37 @@ AI_COMM stores:
 - open questions
 - next step for the next model
 
+`/handoff`는 오직 모델 전환을 위한 연속성 작업이다. 작업 계약의 생성·승인·실행·인수·보관을 `/handoff`에 결합하지 않는다.
+
+## [5.5] TASK CONTRACT LIFECYCLE
+
+작업 계약은 고복잡도 작업의 의도·승인·실행·검증을 연결하는 선택적 제어층이다.
+
+Default lifecycle:
+
+`DRAFT -> READY -> ACTIVE -> REVIEW -> ACCEPTED -> ARCHIVED`
+
+- `/ready`는 활성 워크스페이스 안에 `.hames/contracts/_Active/<task-id>/` 패키지를 생성·정리하고 `DRAFT -> READY`로 전환한다.
+- `DRAFT` 이후의 명세를 수정하면 새 리비전의 `AMENDMENT_PENDING`으로 되고 기존 세션 포인터·증거는 무효화된다. 수정된 명세는 다시 `/ready` 및 `/go`를 거쳐야 한다.
+- `/go <task-id>`는 현재 사용자의 명시적인 go 요청을 필요로 하며, 정본 명세의 해시와 승인 출처를 검사한 뒤 `READY -> ACTIVE`로 전환한다.
+- 계약에 따른 구현 후 검증이 성공해야 `ACTIVE -> REVIEW`로 이동한다. 검증 자료는 승인 권한이 아니다.
+- `/accept <task-id>`는 현재 사용자의 별도 인수를 기록하고 `REVIEW -> ACCEPTED`로 전환한다. 테스트 통과나 모델의 자가 평가를 인수로 간주하지 않는다.
+- `/archive <task-id>`는 패키지를 작업 공간 내 `.hames/contracts/_Archive/`로 이동하는 별도의 복구 가능한 보관 전환이다.
+- 활성 계약이 없으면 기존 Hames 실행 흐름을 그대로 적용한다.
+
+### Authority separation
+
+| Role | Authority |
+|---|---|
+| Current user | Intent, approval, acceptance, and any change of scope |
+| Applicable project harness | Local rules, safety constraints, and validation requirements |
+| `contract.json` specification | Approved task objective, allowed file scope, invariants, and checks |
+| `plan.md` | Execution order and implementation guidance only |
+| Code changes | Implementation only; cannot redefine the specification |
+| Evidence and result records | Report what was observed; cannot grant approval or expand scope |
+
+우선순위는 **현재 사용자의 지시 -> 적용되는 로컬 거버넌스와 하네스 -> 승인된 `contract.json`** 순이다. 생성된 계약은 상위 권한을 덮어쓰지 못한다.
+
 ## [6] GIT / EXECUTION ISOLATION
 
 The kernel does not require branch-per-task or worktree-per-task.
@@ -231,6 +262,8 @@ If the user prefers a single-branch workflow:
 - preserve traceability through commit messages and workspace artifacts
 
 Do not invent branch isolation as a mandatory step.
+
+작업 계약 명령은 branch, worktree, commit, push를 자동 생성하거나 실행하지 않는다. Git 저장과 배포는 기존 `/save`, `/subpush` 규칙과 사용자 지시를 따른다.
 
 ## [7] EXTERNAL VALIDATION
 

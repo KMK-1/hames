@@ -98,7 +98,7 @@ process.stdin.on('end', () => {
   const targetScript = process.argv[2];
   if (!targetScript) {
     process.stderr.write('[hook_adapter] missing target script argument\n');
-    process.exit(0);
+    process.exit(2);
   }
 
   const result = spawnSync('node', [targetScript], {
@@ -107,5 +107,15 @@ process.stdin.on('end', () => {
     encoding: 'utf8',
   });
 
-  process.exit(result.status || 0);
+  if (result.error) {
+    process.stderr.write(`[hook_adapter] target launch failed: ${result.error.message}\n`);
+    process.exit(2);
+  }
+  if (result.signal || result.status === null) {
+    process.stderr.write(
+      `[hook_adapter] target terminated without an exit code${result.signal ? ` (${result.signal})` : ''}\n`
+    );
+    process.exit(2);
+  }
+  process.exit(result.status);
 });

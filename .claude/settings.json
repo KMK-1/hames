@@ -78,6 +78,7 @@
       "Bash(node *perplexity_tool.js*)",
       "Bash(node *seo_report.js*)",
       "Bash(node *session_logger.js*)",
+      "Bash(node *task_contract.js*)",
       "Bash(node *update_arsenal_permissions.js*)",
       "Bash(node *verify_edit_surgery.js*)",
       "Bash(node *verify_tasks.js*)",
@@ -139,6 +140,16 @@
         ]
       },
       {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/task_contract_guard.js\"",
+            "statusMessage": "작업 계약 범위 확인 중..."
+          }
+        ]
+      },
+      {
         "matcher": "Write",
         "hooks": [
           {
@@ -174,6 +185,16 @@
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR/arsenal/update_arsenal_permissions.js\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/task_contract_evidence.js\"",
+            "statusMessage": "작업 계약 증거 기록 중..."
           }
         ]
       },

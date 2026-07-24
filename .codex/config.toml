@@ -28,6 +28,13 @@ matcher = "Write|Edit|Bash"
 type = "command"
 command = 'node "$(git rev-parse --show-toplevel)/.claude/hooks/hook_adapter.js" "$(git rev-parse --show-toplevel)/arsenal/compliance_auditor.js"'
 
+# task_contract_guard — ACTIVE 계약의 승인 범위 집행
+[[hooks.pre_tool_use]]
+matcher = "Write|Edit|MultiEdit|NotebookEdit|Bash"
+[[hooks.pre_tool_use.hooks]]
+type = "command"
+command = 'node "$(git rev-parse --show-toplevel)/.claude/hooks/hook_adapter.js" "$(git rev-parse --show-toplevel)/.claude/hooks/task_contract_guard.js"'
+
 # verify_frontmatter_block — workspaces/ 새 .md 작성 시 frontmatter 누락 즉시 차단
 [[hooks.pre_tool_use]]
 matcher = "Write"
@@ -65,6 +72,13 @@ matcher = "Write"
 type = "command"
 command = 'python "$(git rev-parse --show-toplevel)/arsenal/index_post_write_auditor.py"'
 timeout = 120
+
+# task_contract_evidence — 기존 검증 후 계약 증거 기록
+[[hooks.post_tool_use]]
+matcher = "Write|Edit|MultiEdit|NotebookEdit|Bash"
+[[hooks.post_tool_use.hooks]]
+type = "command"
+command = 'node "$(git rev-parse --show-toplevel)/.claude/hooks/hook_adapter.js" "$(git rev-parse --show-toplevel)/.claude/hooks/task_contract_evidence.js"'
 
 # session_logger — 세션 로그 기록
 [[hooks.post_tool_use]]

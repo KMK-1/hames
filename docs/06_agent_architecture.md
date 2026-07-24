@@ -165,6 +165,33 @@ External validation (Perplexity, web search) is encouraged for `Marketer` becaus
 3. **Auditor VETO.** When Level-2 has a `_auditor` step, it can return REJECT to its Level-1 parent. The parent re-spawns the writer/coder with the rejection feedback. Two REJECT cycles = escalate to user.
 4. **No auto-VETO across teams.** A CFO veto cannot block a CBO output. Level-2 VETO is intra-team only.
 
+## Task contracts for gated execution
+
+For high-complexity work, or whenever the user explicitly invokes `/ready`, the COO can place the task on a workspace-local contract lifecycle:
+
+```mermaid
+flowchart LR
+    U["Current user"] --> R["/ready<br/>DRAFT -> READY"]
+    R --> G["/go task-id<br/>READY -> ACTIVE"]
+    G --> E["Agent execution<br/>within approved paths"]
+    E --> V["Validation<br/>ACTIVE -> REVIEW"]
+    V --> A["/accept task-id<br/>REVIEW -> ACCEPTED"]
+    A --> AR["/archive task-id<br/>recoverable archive"]
+```
+
+The contract package lives at `.hames/contracts/_Active/<task-id>/` inside the active workspace. `contract.json` is the canonical approved specification; `plan.md` only guides execution. Code and evidence show what was done but cannot change scope or grant acceptance.
+
+Authority remains separated:
+
+1. The current user controls intent, approval, scope changes, and acceptance.
+2. Applicable workspace/project governance and the Hames harness constrain every execution.
+3. The approved `contract.json` controls task objective, file scope, invariants, and checks.
+4. `plan.md`, implementation, evidence, and result records are subordinate artifacts.
+
+The contract commands do not create or change Git branches/worktrees and do not commit or push. `/save` and `/subpush` keep their existing roles. `/handoff` remains exclusively a model-switch continuity command.
+
+If no task contract is active, the contract guard legacy-passes and the ordinary Hames workflow is unchanged. File-tool paths are enforced for an active contract; Bash inspection remains best-effort rather than a complete sandbox. Critical actions always retain their separate explicit-approval gate.
+
 ---
 
 ## Verifying sub-agent output

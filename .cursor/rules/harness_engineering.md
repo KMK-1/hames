@@ -96,8 +96,21 @@ Primary scripts (located in `arsenal/`):
 - `verify_tasks.js` — 워크스페이스 산출물 검증
 - `verify_edit_surgery.js` — 파일 수정 수술 적합성 검토
 - `update_arsenal_permissions.js` — 도구 권한 자동 업데이트
+- `task_contract.js` — 작업 계약 생성·상태 전환·검증
+- `task_contract_guard.js` — 활성 계약의 파일 도구 쓰기 범위 집행
+- `task_contract_evidence.js` — 세션에 연결된 ACTIVE/REVIEW 계약의 도구 결과 증거 기록
 
 `verify_tasks.js`, `verify_edit_surgery.js`, `update_arsenal_permissions.js`는 PostToolUse hook으로 자동 실행되며 (`compliance_auditor.js`는 PreToolUse), 별도 슬래시 커맨드는 두지 않습니다. 시스템 무결성 점검은 `/doctor`, 콘텐츠·인덱스 감사는 `/index`로 통합되어 있습니다.
+
+## [7.5] TASK CONTRACT ENFORCEMENT
+
+- 작업 계약의 정본은 워크스페이스 내 `.hames/contracts/_Active/<task-id>/contract.json`이다. `plan.md`, 증거, 결과 파일은 권한 정보가 아니다.
+- `task_contract_guard.js`는 `ACTIVE` 계약이 있을 때 Write/Edit/MultiEdit/NotebookEdit 대상을 승인된 파일 범위와 대조한다. Bash 검사는 문자열·경로 패턴 기반의 **best-effort**이며 완전한 sandbox로 설명하지 않는다.
+- 활성 계약이 없으면 작업 계약 훅은 legacy-pass하고 기존 workspace lock·compliance·frontmatter·verifier 규칙만 적용한다.
+- `/go`는 현재 사용자의 명시적인 요청, `READY` 상태, 정본 명세 해시, 승인 출처 구조가 모두 유효할 때만 현재 런타임 세션에 활성화한다. 출처는 감사 메타데이터이며 사용자 인증을 대체하지 못한다.
+- 정의된 검증이 성공해야 `REVIEW`로 이동할 수 있다. `REVIEW`는 기술적 검토 대기 상태이며 사용자 인수를 의미하지 않는다.
+- `/accept`는 현재 사용자의 별도 인수 요청으로만 수행한다. `/archive`는 보관 전환이며 삭제가 아니며, 패키지는 워크스페이스 내에서 복구 가능해야 한다.
+- 작업 계약은 [1] `DEFINED_CRITICAL_ACTIONS`의 명시적 사용자 승인을 대체하거나 완화하지 못한다.
 
 ## [8] DESIGN INTENT
 

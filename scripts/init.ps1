@@ -195,7 +195,7 @@ if (Test-Path $verifyScript) {
     } else {
         Write-Host ""
         Write-Host "$prefix running install verification..." -ForegroundColor Cyan
-        & node $verifyScript
+        & node $verifyScript --mode installed
         $verifyExit = $LASTEXITCODE
         if ($verifyExit -ne 0) {
             Write-Host "$prefix VERIFICATION FAILED (exit $verifyExit). Inspect output above." -ForegroundColor Red

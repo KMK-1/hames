@@ -3,11 +3,11 @@
  * Hames install verification
  * ============================================================================
  * Runs after init.{ps1,sh}. Checks:
- *   - 6 core rule files present
+ *   - Core rule and task-contract files present
  *   - Defense-line signatures match context_signatures.json
  *   - Hook scripts present
  *   - Critical JSON files parse
- *   - No unrendered {{TOKEN}} placeholders remain
+ *   - Source templates or installed token rendering, depending on --mode
  *   - .env is not committed (basic guard)
  *
  * Exit 0 on pass, 1 on any failure.
@@ -16,7 +16,29 @@
 const fs = require('fs');
 const path = require('path');
 
-const HAMES_ROOT = path.resolve(__dirname, '..');
+const VALID_MODES = new Set(['source', 'installed']);
+
+function readMode(argv) {
+    const modeIndex = argv.indexOf('--mode');
+    const inline = argv.find(arg => arg.startsWith('--mode='));
+    const mode = inline ? inline.slice('--mode='.length)
+        : modeIndex >= 0 ? argv[modeIndex + 1]
+            : 'source';
+    if (!VALID_MODES.has(mode)) {
+        throw new Error(`invalid --mode "${mode || ''}" (expected source or installed)`);
+    }
+    return mode;
+}
+
+let MODE;
+try {
+    MODE = readMode(process.argv.slice(2));
+} catch (error) {
+    console.error(`[verify_install] ${error.message}`);
+    process.exit(2);
+}
+
+const HAMES_ROOT = path.resolve(process.env.HAMES_VERIFY_ROOT || path.resolve(__dirname, '..'));
 let passed = 0;
 let failed = 0;
 const failures = [];
@@ -44,10 +66,11 @@ console.log('===================================================================
 console.log(' Hames install verification');
 console.log('============================================================================');
 console.log(`  Hames root: ${HAMES_ROOT}`);
+console.log(`  Mode: ${MODE}`);
 console.log('');
 
-// ── Section 1 — Core rule files ─────────────────────────────────────────────
-console.log('[1] Core rule files');
+// ── Section 1 — Core and contract files ─────────────────────────────────────
+console.log('[1] Core and contract files');
 const coreFiles = [
     'CLAUDE.md',
     '.cursor/rules/prompt_engineering.md',
@@ -56,6 +79,8 @@ const coreFiles = [
     '.cursor/rules/harness_engineering.md',
     '.cursor/rules/enforcement.md',
     'arsenal/CLAUDE.md',
+    'arsenal/task_contract.js',
+    'arsenal/task_contract.schema.json',
 ];
 for (const rel of coreFiles) {
     check(rel, () => {
@@ -74,6 +99,8 @@ const hookFiles = [
     '.claude/hooks/workspace_guard.js',
     '.claude/hooks/hook_adapter.js',
     '.claude/hooks/session_capture.js',
+    '.claude/hooks/task_contract_guard.js',
+    '.claude/hooks/task_contract_evidence.js',
     'arsenal/compliance_auditor.js',
     'arsenal/verify_tasks.js',
     'arsenal/verify_edit_surgery.js',
@@ -101,6 +128,7 @@ const jsonFiles = [
     '.claude/settings.json',
     '.codex/hooks.json',
     '.gemini/settings.json',
+    'arsenal/task_contract.schema.json',
     'arsenal/audit_exclusions.json',
     'arsenal/credentials.example.json',
     'arsenal/token.example.json',
@@ -120,16 +148,21 @@ for (const rel of jsonFiles) {
 }
 console.log('');
 
-// ── Section 5 — Unrendered tokens ───────────────────────────────────────────
-console.log('[5] Unrendered {{TOKEN}} placeholders');
+// ── Section 5 — Template tokens ─────────────────────────────────────────────
+console.log(`[5] Template tokens (${MODE})`);
 const tokenPattern = /\{\{(CEO_NAME|CEO_EMAIL|HAMES_ROOT|HAMES_ROOT_POSIX|HAMES_ROOT_ESCAPED)\}\}/g;
+const anyTokenPattern = /\{\{([A-Z][A-Z0-9_]*)\}\}/g;
+const allowedSourceTokens = new Set([
+    'CEO_NAME', 'CEO_EMAIL', 'HAMES_ROOT', 'HAMES_ROOT_POSIX', 'HAMES_ROOT_ESCAPED',
+    'TOKEN' // Generic documentation placeholder in installer comments.
+]);
 const ignoreFiles = new Set([
     '.gitignore',  // never has tokens
     '.gitattributes',
 ]);
 const ignoreDirs = new Set(['.git', 'node_modules', '__pycache__', 'workspaces']);
 
-function walkAndCheck(dir) {
+function walkAndCheck(dir, pattern) {
     const remaining = [];
     function recurse(current) {
         const items = fs.readdirSync(current, { withFileTypes: true });
@@ -144,7 +177,7 @@ function walkAndCheck(dir) {
                 const full = path.join(current, item.name);
                 let content;
                 try { content = fs.readFileSync(full, 'utf8'); } catch { continue; }
-                const matches = content.match(tokenPattern);
+                const matches = content.match(pattern);
                 if (matches) {
                     remaining.push({
                         file: path.relative(HAMES_ROOT, full),
@@ -158,29 +191,90 @@ function walkAndCheck(dir) {
     return remaining;
 }
 
-check('no unrendered tokens (excludes workspaces/_scaffold/)', () => {
-    const remaining = walkAndCheck(HAMES_ROOT);
-    if (remaining.length === 0) return true;
-    return `${remaining.length} files have unrendered tokens: ${remaining.slice(0,3).map(r => r.file + ' (' + r.tokens.join(',') + ')').join('; ')}${remaining.length > 3 ? ' ...' : ''}`;
-});
+if (MODE === 'installed') {
+    check('no unrendered tokens (excludes workspaces/_scaffold/)', () => {
+        const remaining = walkAndCheck(HAMES_ROOT, tokenPattern);
+        if (remaining.length === 0) return true;
+        return `${remaining.length} files have unrendered tokens: ${remaining.slice(0,3).map(r => r.file + ' (' + r.tokens.join(',') + ')').join('; ')}${remaining.length > 3 ? ' ...' : ''}`;
+    });
+} else {
+    check('source templates use only supported tokens', () => {
+        const entries = walkAndCheck(HAMES_ROOT, anyTokenPattern);
+        const unknown = entries.flatMap(entry => entry.tokens
+            .map(token => token.slice(2, -2))
+            .filter(token => !allowedSourceTokens.has(token))
+            .map(token => `${entry.file} ({{${token}}})`));
+        if (unknown.length === 0) return true;
+        return `unsupported template tokens: ${unknown.slice(0,3).join('; ')}`;
+    });
+}
 console.log('');
 
 // ── Section 6 — Per-machine state ───────────────────────────────────────────
 console.log('[6] Per-machine state');
-check('.claude/.workspace_lock', () => {
+function checkMachineJson(rel) {
+    const full = path.join(HAMES_ROOT, rel);
+    if (!fs.existsSync(full)) {
+        return MODE === 'source' ? true : 'missing — run init.{ps1|sh}';
+    }
+    JSON.parse(fs.readFileSync(full, 'utf8'));
+}
+
+check(`.claude/.workspace_lock (${MODE === 'source' ? 'optional' : 'required'})`, () => {
     const lock = path.join(HAMES_ROOT, '.claude/.workspace_lock');
-    if (!fs.existsSync(lock)) return 'missing — run init.{ps1|sh}';
-    JSON.parse(fs.readFileSync(lock, 'utf8'));
+    return checkMachineJson(path.relative(HAMES_ROOT, lock));
 });
-check('.claude/workspace_paths.json', () => {
-    const f = path.join(HAMES_ROOT, '.claude/workspace_paths.json');
-    if (!fs.existsSync(f)) return 'missing — run init.{ps1|sh}';
-    JSON.parse(fs.readFileSync(f, 'utf8'));
+check(`.claude/workspace_paths.json (${MODE === 'source' ? 'optional' : 'required'})`, () => {
+    return checkMachineJson('.claude/workspace_paths.json');
 });
 console.log('');
 
-// ── Section 7 — Secret hygiene (best-effort) ────────────────────────────────
-console.log('[7] Secret hygiene');
+// ── Section 7 — Managed task-contract hook order ────────────────────────────
+console.log('[7] Managed task-contract hook order');
+const preOrder = [
+    'context_verifier.js', 'workspace_guard.js', 'compliance_auditor.js',
+    'task_contract_guard.js', 'verify_frontmatter_block.js'
+];
+const postOrder = [
+    'verify_edit_surgery.js', 'verify_tasks.js', 'update_arsenal_permissions.js',
+    'task_contract_evidence.js', 'session_logger.js'
+];
+const codexPostOrder = [
+    'verify_edit_surgery.js', 'verify_tasks.js', 'update_arsenal_permissions.js',
+    'index_post_write_auditor.py', 'task_contract_evidence.js', 'session_logger.js'
+];
+
+function jsonHookCommands(rel, event) {
+    const config = JSON.parse(fs.readFileSync(path.join(HAMES_ROOT, rel), 'utf8'));
+    return (config.hooks?.[event] || []).flatMap(block => block.hooks || [])
+        .map(hook => hook.command || '');
+}
+
+function checkOrder(commands, expected) {
+    let previous = -1;
+    for (const script of expected) {
+        const index = commands.findIndex(command => command.includes(script));
+        if (index < 0) return `missing ${script}`;
+        if (index <= previous) return `${script} is out of order`;
+        previous = index;
+    }
+    return true;
+}
+
+check('Claude PreToolUse order', () => checkOrder(jsonHookCommands('.claude/settings.json', 'PreToolUse'), preOrder));
+check('Claude PostToolUse order', () => checkOrder(jsonHookCommands('.claude/settings.json', 'PostToolUse'), postOrder));
+check('Codex App PreToolUse order', () => checkOrder(jsonHookCommands('.codex/hooks.json', 'PreToolUse'), preOrder));
+check('Codex App PostToolUse order', () => checkOrder(jsonHookCommands('.codex/hooks.json', 'PostToolUse'), codexPostOrder));
+check('Gemini BeforeTool order', () => checkOrder(jsonHookCommands('.gemini/settings.json', 'BeforeTool'), preOrder));
+check('Gemini AfterTool order', () => checkOrder(jsonHookCommands('.gemini/settings.json', 'AfterTool'), postOrder));
+check('Codex CLI managed order', () => {
+    const content = fs.readFileSync(path.join(HAMES_ROOT, '.codex/config.toml'), 'utf8');
+    return checkOrder(content.split(/\r?\n/).filter(line => line.startsWith('command = ')), [...preOrder, ...codexPostOrder]);
+});
+console.log('');
+
+// ── Section 8 — Secret hygiene (best-effort) ────────────────────────────────
+console.log('[8] Secret hygiene');
 check('arsenal/.env is gitignored or absent', () => {
     const envFile = path.join(HAMES_ROOT, 'arsenal/.env');
     const gitignore = path.join(HAMES_ROOT, '.gitignore');

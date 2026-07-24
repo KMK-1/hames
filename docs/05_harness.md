@@ -54,6 +54,17 @@ otherwise → block
 
 **Bash matching is best-effort:** the hook scans the Bash command for absolute paths or write-style patterns (`>`, `tee`, `rm`, etc.) and blocks if they target outside the active workspace. Indirect writes (e.g., a Python script that writes a file) cannot be caught at this layer.
 
+### `task_contract_guard.js`
+
+**Triggers:** `Write`, `Edit`, `MultiEdit`, `NotebookEdit`, `Bash`
+
+**Job:** when a task contract is `ACTIVE`, checks file-tool targets against the approved paths in the workspace-local `.hames/contracts/_Active/<task-id>/contract.json`.
+
+- No active contract: legacy-pass; the ordinary Hames hooks still apply.
+- File tools: approved path scope is enforced.
+- Bash: command/path inspection is best-effort and is not a complete filesystem sandbox.
+- Contract metadata, `plan.md`, evidence, and result records cannot expand the approved scope.
+
 ### `compliance_auditor.js`
 
 **Triggers:** `Write`, `Edit`, `Bash`
@@ -95,6 +106,12 @@ Hooks that fire **after** a tool succeeds. They can't block the tool but can war
 
 **Job:** workspace output validation. If a workspace defines a naming pattern (e.g., `{YYYY}-{MM}-{DD}_{Keyword}.md`), this hook checks the new file name. If the filename is wrong, logs a warning (does not block — the write already happened).
 
+### `task_contract_evidence.js`
+
+**Triggers:** `Write`, `Edit`, `MultiEdit`, `NotebookEdit`, `Bash`
+
+**Job:** records post-tool observations for the session-linked contract while it is `ACTIVE` or `REVIEW`. These records support validation and acceptance checks; they are evidence, not user approval or scope authority.
+
 ### `update_arsenal_permissions.js`
 
 **Triggers:** `Write`
@@ -129,25 +146,29 @@ flowchart TD
     T --> CV[1. context_verifier.js<br/>defense line 3]
     CV -->|pass| WG[2. workspace_guard.js<br/>lock enforcement]
     WG -->|pass| CA[3. compliance_auditor.js<br/>overwrite + replace_all + bash]
-    CA -->|pass| VF[4. verify_frontmatter_block.js<br/>Write only]
+    CA -->|pass| TC[4. task_contract_guard.js<br/>active contract scope]
+    TC -->|pass| VF[5. verify_frontmatter_block.js<br/>Write only]
     VF -->|pass| RUN[Tool runs]
-    RUN --> POST[PostToolUse: verify_edit_surgery,<br/>verify_tasks, update_arsenal_permissions,<br/>session_logger]
+    RUN --> POST[PostToolUse: verify_edit_surgery,<br/>verify_tasks, update_arsenal_permissions,<br/>task_contract_evidence, session_logger]
 
     CV -->|fail| B1[BLOCKED]
     WG -->|fail| B2[BLOCKED]
     CA -->|fail| B3[BLOCKED]
+    TC -->|fail| B5[BLOCKED]
     VF -->|fail| B4[BLOCKED]
 
     style T fill:#374151,stroke:#9ca3af,color:#fff
     style CV fill:#7f1d1d,stroke:#fca5a5,color:#fff
     style WG fill:#7f1d1d,stroke:#fca5a5,color:#fff
     style CA fill:#7f1d1d,stroke:#fca5a5,color:#fff
+    style TC fill:#7f1d1d,stroke:#fca5a5,color:#fff
     style VF fill:#7f1d1d,stroke:#fca5a5,color:#fff
     style RUN fill:#14532d,stroke:#86efac,color:#fff
     style POST fill:#1e3a5f,stroke:#60a5fa,color:#fff
     style B1 fill:#7f1d1d,stroke:#fca5a5,color:#fff
     style B2 fill:#7f1d1d,stroke:#fca5a5,color:#fff
     style B3 fill:#7f1d1d,stroke:#fca5a5,color:#fff
+    style B5 fill:#7f1d1d,stroke:#fca5a5,color:#fff
     style B4 fill:#7f1d1d,stroke:#fca5a5,color:#fff
 ```
 
@@ -283,6 +304,16 @@ Not every harness rule is a hook. Some failure modes can't be caught by pattern-
 | `[16]` GIT CWD & SYNC | Name the CWD for multi-step git; don't call sync "done" on `git status` alone (check unpushed commits) | Lost commits, false "synced" claims |
 
 These overlap the hook layer where machine enforcement is possible (e.g., `compliance_auditor.js` can pattern-block some dangerous git commands), but the residual judgment stays with the model. They live in the harness module because they share its purpose: keeping the system resistant to uncontrolled drift.
+
+## Task contract lifecycle
+
+Task contracts add a gated path for high-complexity work without slowing ordinary low-complexity work:
+
+`DRAFT -> READY -> ACTIVE -> REVIEW -> ACCEPTED -> ARCHIVED`
+
+`/ready` writes the canonical specification, `/go` activates it for the current runtime session only after a current-user request and hash/provenance validation, validation moves the task to `REVIEW`, `/accept` records separate user acceptance, and `/archive` performs a recoverable workspace-local archive transition. Provenance is audit metadata, not authentication. These commands never create branches, worktrees, commits, or pushes. Critical actions still require the existing explicit approval even when a contract is active.
+
+Revising a post-`DRAFT` contract creates a new `AMENDMENT_PENDING` revision and invalidates its previous session pointer and evidence. The amended specification must pass `/ready` and `/go` again.
 
 ---
 

@@ -14,6 +14,8 @@ Terms used across Hames documentation. Listed alphabetically.
 
 **Confirmation Block** — The two-line `Loaded:` and `Signatures:` block required in the first substantive response. Defense line 2.
 
+**Contract Package** — Workspace-local directory at `.hames/contracts/_Active/<task-id>/`. Its `contract.json` is canonical; plans, evidence, and result records are subordinate artifacts.
+
 **COO** — "Chief Operating Officer". The router agent named Hames. Does not execute substantive tasks; spawns Level-1 agents.
 
 **Critical Action** — One of `DELETE_FILE`, `OVERWRITE_EXISTING`, `SEND_EMAIL`, `DEPLOY_CODE`, `EXECUTE_SHELL`, `MOVE_FILE`. Requires explicit user approval before execution.
@@ -61,6 +63,10 @@ Terms used across Hames documentation. Listed alphabetically.
 **Signatures** — The six load-bearing phrases that confirm the six core rule files were read. Listed in `.claude/context_signatures.json`. Checked by `context_verifier.js`.
 
 **Spawn Protocol** — The decision rule for when COO must spawn a Level-1 agent vs handle directly. Defined in `agent_engineering.md` [2.7].
+
+**Task Contract** — Optional gated execution record used for high-complexity tasks or when the user invokes `/ready`. Lifecycle: `DRAFT -> READY -> ACTIVE -> REVIEW -> ACCEPTED -> ARCHIVED`. It never replaces current-user authority, local governance, or critical-action approval.
+
+**Task Contract Guard** — PreToolUse hook that enforces approved file-tool paths while a contract is `ACTIVE`. With no active contract it legacy-passes; Bash checking is best-effort, not a full sandbox.
 
 **SYSTEM_ADMIN paths** — `arsenal/`, `.claude/`. Always writable regardless of workspace lock state. Required for the harness itself to update.
 
