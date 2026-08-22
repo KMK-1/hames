@@ -16,3 +16,6 @@ Treat upstream updates as untrusted changes until reviewed. Pay special attentio
 
 ## Pilot status
 The repository includes `tests/enterprise_guard.test.js` as a local regression suite. Its presence is not evidence that it has run on your company workstation. Execute it locally and record the result before promotion.
+
+## Current phase
+This is a conservative Phase 1 profile. It intentionally prioritizes a small automatic permission surface over convenience. Add permissions only after a concrete workflow requires them and after reviewing the exact command/data path.
