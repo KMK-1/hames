@@ -14,7 +14,7 @@ Keep Hames orchestration, roles, workspace isolation, contracts, review, and aud
 - existing workspace, context, task-contract, compliance, evidence and session logging hooks retained.
 
 ## Direct external integrations
-The upstream repository contains optional third-party helper tools. They are not granted execution permission in this profile and should not be configured with company data or credentials unless specifically approved. Physical removal can be performed after compatibility testing if company policy requires it.
+The upstream repository contains optional third-party helper tools. They are not granted execution permission in this profile and must not be configured with company data or credentials unless specifically approved. This initial profile keeps upstream files for compatibility while blocking their normal agent execution paths.
 
 ## Important limitation
 This profile is defense-in-depth, not a substitute for company network, endpoint, identity, repository, data-classification or AI-gateway controls. Confirm the Claude/Codex route independently with company IT/security.
