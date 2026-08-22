@@ -13,3 +13,6 @@ Never commit company names, internal hostnames, proxy addresses, credentials, in
 
 ## Upstream updates
 Treat upstream updates as untrusted changes until reviewed. Pay special attention to `.claude/settings.json`, `.claude/hooks/`, `arsenal/`, dependency manifests, install scripts, and any new network integration.
+
+## Pilot status
+The repository includes `tests/enterprise_guard.test.js` as a local regression suite. Its presence is not evidence that it has run on your company workstation. Execute it locally and record the result before promotion.
