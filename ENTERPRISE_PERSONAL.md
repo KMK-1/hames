@@ -28,4 +28,4 @@ This profile is defense-in-depth, not a substitute for company network, endpoint
 6. Require human approval for external communications, deployments, package installs and system changes.
 7. Run `node tests/enterprise_guard.test.js` before pilot use.
 
-See `ENTERPRISE_SECURITY_CHECKLIST.md` for the promotion checklist.
+See `ENTERPRISE_SECURITY_CHECKLIST.md` for the promotion checklist and `SECURITY_ENTERPRISE.md` for the threat model.
