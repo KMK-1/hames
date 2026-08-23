@@ -7,22 +7,35 @@ Hames keeps its existing **COO Router** as the orchestration brain. Herdr is use
 ```text
 User
   ↓
-Hames COO Router
+Hames COO (Claude Sonnet 5)
   ↓
 Herdr runtime
-  ├─ code     → GPT-5.6 Terra / medium
-  ├─ ui       → Claude Sonnet 5
-  ├─ reviewer → GPT-5.6 Terra / medium
-  └─ video    → Claude Sonnet 5 [optional]
+  ├─ Producers
+  │   ├─ code  → GPT-5.6 Terra / medium
+  │   ├─ ui    → Claude Sonnet 5
+  │   └─ video → Claude Sonnet 5 [optional]
+  │
+  └─ Quality Gate
+      └─ reviewer → GPT-5.6 Terra / medium
 ```
 
-## Ownership
+## Three-layer model
+
+### 1. Coordinator
+
+- `hames-coo`: task decomposition, dispatch, integration, rework routing, final reporting
+- model: Claude Sonnet 5
+
+### 2. Producers
 
 - `code`: architecture, backend, API, DB, logic, tests
 - `ui`: information architecture, interaction, visual hierarchy, responsive/accessibility
-- `reviewer`: independent quality gate; no feature creation
 - `video`: storyboard/motion/video only when explicitly needed
-- `Hames COO`: decomposition, dispatch, integration, rework routing, final reporting
+
+### 3. Quality Gate
+
+- `reviewer`: independent quality gate; no feature creation
+- reviewer may be started with the runtime, but remains idle until the integrated state is ready for review
 
 ## Recommended flow
 
@@ -33,11 +46,11 @@ DECOMPOSE
   ↓
 DISPATCH code/ui[/video] in parallel
   ↓
-WAIT + COLLECT handoffs
+WAIT + COLLECT producer handoffs
   ↓
-INTEGRATE worker branches
+INTEGRATE producer branches
   ↓
-REVIEW integrated state
+INVOKE reviewer on integrated state
   ↓
 PASS → ready for merge
 FAIL → route findings to owner → re-review
@@ -71,7 +84,7 @@ With video:
 .\arsenal\herdr\bootstrap_agents.ps1 -TaskId contest-demo -Base main -Video
 ```
 
-## Worker handoff contract
+## Producer handoff contract
 
 ```yaml
 STATUS: DONE | BLOCKED | FAILED
@@ -101,7 +114,7 @@ NEEDS:
 This runtime does not replace Hames harness/enforcement rules.
 
 - main stays protected
-- worker branches must not merge directly to main
+- producer branches must not merge directly to main
 - reviewer must not modify files unless explicitly requested
 - merge conflicts are routed back to the responsible owner
 - existing Hames approval rules still apply to shell/write/deploy actions
