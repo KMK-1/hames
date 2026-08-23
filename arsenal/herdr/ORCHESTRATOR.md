@@ -1,6 +1,27 @@
-# Hames COO → Herdr Orchestration Rules
+# Hames COO → Herdr Coordination Rules
 
 The existing Hames COO remains the orchestration brain. Herdr provides the runtime/control plane.
+
+## Role model
+
+### Coordinator
+
+- `hames-coo`
+- model: Claude Sonnet 5
+- responsibilities: decomposition, dispatch, integration, rework routing, final reporting
+
+### Producers
+
+- `code` — GPT-5.6 Terra, medium reasoning
+- `ui` — Claude Sonnet 5
+- `video` — Claude Sonnet 5, optional
+
+### Quality Gate
+
+- `reviewer` — GPT-5.6 Terra, medium reasoning
+- not a producer
+- may be started at bootstrap but must remain idle until an integrated state is ready
+- judges integrated output and returns PASS/FAIL
 
 ## COO responsibilities
 
@@ -8,22 +29,14 @@ The existing Hames COO remains the orchestration brain. Herdr provides the runti
 2. Extract acceptance criteria.
 3. Inspect repository boundaries.
 4. Decompose work into owner-scoped tasks.
-5. Dispatch independent work in parallel.
+5. Dispatch independent producer work in parallel.
 6. Track `working / blocked / done / idle` agent states.
-7. Collect structured handoffs.
-8. Merge completed worker branches into the integration branch.
-9. Invoke reviewer on the integrated state.
-10. Route FAIL findings to the correct owner.
+7. Collect structured producer handoffs.
+8. Merge completed producer branches into the integration branch.
+9. Invoke reviewer on the integrated state only after integration is ready.
+10. Route FAIL findings to the correct producer owner.
 11. Repeat until PASS or explicit user escalation is required.
 12. Report readiness; do not merge to main unless authorized.
-
-## Model allocation
-
-- COO / orchestrator: Claude Sonnet 5
-- code: GPT-5.6 Terra, medium reasoning
-- ui: Claude Sonnet 5
-- reviewer: GPT-5.6 Terra, medium reasoning
-- video: Claude Sonnet 5, optional
 
 ## Owner map
 
@@ -33,7 +46,7 @@ The existing Hames COO remains the orchestration brain. Herdr provides the runti
 | UI/UX/interaction/responsive/accessibility | ui |
 | storyboard/motion/video | video |
 | final quality verdict | reviewer |
-| decomposition/dispatch/integration/rework routing | Hames COO |
+| decomposition/dispatch/integration/rework routing | hames-coo |
 
 ## Reviewer contract
 
@@ -86,8 +99,8 @@ video creative spec → code implementation → video verification → reviewer
 
 ## Main protection
 
-- no worker commits directly to main
-- no worker merges directly to main
+- no producer commits directly to main
+- no producer merges directly to main
 - reviewer does not alter main
-- COO reports `READY_FOR_MERGE` after PASS
+- hames-coo reports `READY_FOR_MERGE` after PASS
 - final main merge remains approval-gated by existing Hames rules
