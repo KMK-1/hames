@@ -35,7 +35,7 @@ function New-HerdrWorktree {
 Write-Host "Creating integration worktree..."
 $integration = New-HerdrWorktree "agent/$TaskId/integration" "integration-$TaskId"
 $IntegrationWs = $integration.result.workspace.workspace_id
-$OrchPane = $integration.result.root_pane.pane_id
+$CooPane = $integration.result.root_pane.pane_id
 
 Write-Host "Creating code worktree..."
 $code = New-HerdrWorktree "agent/$TaskId/code" "code-$TaskId"
@@ -48,12 +48,12 @@ $UiWs = $ui.result.workspace.workspace_id
 $UiPane = $ui.result.root_pane.pane_id
 
 Write-Host "Creating reviewer pane in integration workspace..."
-$reviewSplitJson = herdr pane split $OrchPane --direction right --no-focus
+$reviewSplitJson = herdr pane split $CooPane --direction right --no-focus
 $reviewSplit = $reviewSplitJson | ConvertFrom-Json
 $ReviewPane = $reviewSplit.result.pane.pane_id
 
-Write-Host "Starting agents..."
-herdr agent start orchestrator --kind claude --pane $OrchPane -- --model claude-sonnet-5
+Write-Host "Starting coordinator, producers, and quality gate..."
+herdr agent start hames-coo --kind claude --pane $CooPane -- --model claude-sonnet-5
 herdr agent start reviewer --kind codex --pane $ReviewPane -- -m gpt-5.6-terra -c model_reasoning_effort=medium
 herdr agent start code --kind codex --pane $CodePane -- -m gpt-5.6-terra -c model_reasoning_effort=medium
 herdr agent start ui --kind claude --pane $UiPane -- --model claude-sonnet-5
@@ -74,10 +74,11 @@ Write-Host "Hames + Herdr runtime ready"
 Write-Host "TASK_ID: $TaskId"
 Write-Host "BASE: $Base"
 Write-Host "integration workspace: $IntegrationWs"
-Write-Host "orchestrator pane: $OrchPane"
-Write-Host "reviewer pane: $ReviewPane"
-Write-Host "code workspace/pane: $CodeWs / $CodePane"
-Write-Host "ui workspace/pane: $UiWs / $UiPane"
-Write-Host "video workspace/pane: $VideoWs / $VideoPane"
+Write-Host "hames-coo pane: $CooPane"
+Write-Host "reviewer pane (Quality Gate): $ReviewPane"
+Write-Host "code workspace/pane (Producer): $CodeWs / $CodePane"
+Write-Host "ui workspace/pane (Producer): $UiWs / $UiPane"
+Write-Host "video workspace/pane (Optional Producer): $VideoWs / $VideoPane"
 Write-Host ""
-Write-Host "Next: focus/attach to 'orchestrator', activate HamesSystem, then provide the task."
+Write-Host "Next: focus/attach to 'hames-coo', activate HamesSystem, then provide the task."
+Write-Host "Reviewer is started but should remain IDLE until hames-coo finishes integration."
